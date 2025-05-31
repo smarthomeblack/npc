@@ -42,7 +42,8 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
-      - ./data:/app/data
+      - ./npc:/app/data
+      - ./npc/config.txt:/app/config.txt
 ```
 
 ---
