@@ -8,7 +8,6 @@
   "boot": "auto",
   "image": "ghcr.io/smarthomeblack/npc:hass.2025.5.31",
   "init": false,
-  "map": ["config:rw"],
   "options": {},
   "schema": {},
   "arch": ["amd64", "aarch64", "armv7"]
