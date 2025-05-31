@@ -1,0 +1,19 @@
+---
+version: hass.2025.5.31
+slug: npcmienbac
+name: NPC Mien Bac MQTT
+description: Tự động lấy dữ liệu điện từ NPC Miền Bắc và đẩy lên MQTT
+url: https://github.com/smarthomeblack/npc/npcmienbac
+startup: application
+boot: auto
+image: ghcr.io/smarthomeblack/npc:hass.2025.5.31
+init: false
+map:
+  - config/npc:rw
+options: {}
+schema: {}
+arch:
+  - amd64
+  - aarch64
+  - armv7
+homeassistant: 2025.5.0  # Thêm phiên bản tối thiểu của Home Assistant
