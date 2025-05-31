@@ -11,5 +11,4 @@
   "options": {},
   "schema": {},
   "arch": ["amd64", "aarch64", "armv7"]
-
 }
