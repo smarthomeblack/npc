@@ -37,7 +37,7 @@ gemini_model=gemini-2.0-flash
 
 services:
   npc:
-    image: ghcr.io/smarthomeblack/npc:latest
+    image: ghcr.io/smarthomeblack/npc:2025.5.31
     container_name: npc_container
     restart: unless-stopped
     network_mode: host
