@@ -14,7 +14,7 @@ Công cụ tự động đăng nhập vào website CSKH NPC (miền Bắc), lấ
 Tạo file `config.txt` trong thư mục lưu trữ bạn muốn với nội dung mẫu:
 
 ```ini
-makhachhang=điền mã điểm đo
+makhachhang=điền mã điểm đo(đăng nhập vào npc rồi lấy dữ liệu tiêu thụ là thấy mã điểm đo)
 mqtt_server=
 mqtt_port=1883
 mqtt_username=
