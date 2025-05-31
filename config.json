@@ -6,10 +6,11 @@
   "url": "https://github.com/smarthomeblack/npc", 
   "startup": "application",
   "boot": "auto",
-  "image": "ghcr.io/smarthomeblack/npc:2025.5.31",
+  "image": "ghcr.io/smarthomeblack/npc:hass.2025.5.31",
   "init": false,
   "map": ["config:rw"],
   "options": {},
   "schema": {},
   "arch": ["amd64", "aarch64", "armv7"]
+
 }
