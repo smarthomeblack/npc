@@ -1,5 +1,6 @@
 #Update
 - 2025.6.2d Thêm cấu hình ngày đầu kỳ trong file config.vui lòng sửa file config nếu cập nhập mới
+- 2025.6.2 Thêm Cảm biến tiêu thụ hôm kia và tiền điện tháng này tạm tính
 # 🔌 NPC Electricity MQTT Bridge
 
 Công cụ tự động đăng nhập vào website CSKH NPC (miền Bắc), lấy dữ liệu điện tiêu thụ & tiền điện, và gửi qua MQTT về Home Assistant.
@@ -130,6 +131,7 @@ entities:
   - sensor.npc_tien_dien_thang_truoc
   - sensor.npc_tieu_thu_hom_nay
   - sensor.npc_tieu_thu_hom_qua
+  - sensor.npc_tieu_thu_hom_kia
   - sensor.npc_tieu_thu_thang_nay
   - sensor.npc_tieu_thu_thang_truoc
 ```
