@@ -41,6 +41,8 @@ services:
     container_name: npc_container
     restart: unless-stopped
     network_mode: host
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     volumes:
       - ./npc:/app/data
       - ./npc/config.txt:/app/config.txt
