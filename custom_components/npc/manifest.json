@@ -1,0 +1,11 @@
+{
+  "domain": "npc",
+  "name": "NPC Integration",
+  "config_flow": true,
+  "documentation": "https://example.com",
+  "dependencies": [],
+  "codeowners": ["@yourname"],
+  "requirements": [],
+  "version": "1.0.0",
+  "iot_class": "local_push"
+}
