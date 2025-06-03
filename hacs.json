@@ -1,0 +1,6 @@
+{
+  "name": "NPC Miền Bắc",
+  "domains": ["sensor"],
+  "homeassistant": "2021.2.0",
+  "render_readme": true
+}
