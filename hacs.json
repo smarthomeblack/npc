@@ -1,5 +1,5 @@
 {
-  "name": "NPC Miền Bắc",
+  "name": "EVN",
   "domains": ["sensor"],
   "homeassistant": "2021.2.0",
   "render_readme": true
