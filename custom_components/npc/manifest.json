@@ -1,6 +1,6 @@
 {
   "domain": "npc",
-  "name": "NPC Miền Bắc",
+  "name": "EVN VN",
   "config_flow": true,
   "documentation": "https://github.com/smarthomeblack/hass-addon",
   "dependencies": [],
