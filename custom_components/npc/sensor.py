@@ -80,6 +80,7 @@ class NPCSensor(SensorEntity):
             "lan_cap_nhat_cuoi": "mdi:clock-time-eight",
             "chi_tiet_dien_tieu_thu_thang_nay": "mdi:calendar-month",
             "tien_dien_san_luong_nam_nay": "mdi:calendar-month",
+            "lich_cat_dien": "mdi:calendar-month",
         }
         return ICON_MAPPING.get(self._sensor_type, None)
 
@@ -87,8 +88,8 @@ class NPCSensor(SensorEntity):
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self._usernpc)},
-            "name": f"NPC Device ({self._usernpc})",
-            "manufacturer": "NPC",
+            "name": f"EVN VN Device ({self._usernpc})",
+            "manufacturer": "EVN VN",
             "model": "Electricity Meter",
         }
 
