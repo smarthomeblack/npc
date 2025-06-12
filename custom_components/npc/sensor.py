@@ -4,13 +4,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    usernpc = config_entry.data[CONF_USERNAME]
+    userevn = config_entry.data[CONF_USERNAME]
     entry_id = config_entry.entry_id
     sensor_map = {}
 
     async def handle_new_sensor(sensor_type, unique_id, payload, unit):
         if unique_id not in sensor_map:
-            sensor = NPCSensor(hass, usernpc, sensor_type, unique_id, unit)
+            sensor = EVNSensor(hass, userevn, sensor_type, unique_id, unit)
             sensor_map[unique_id] = sensor
             sensor._state = payload
             async_add_entities([sensor])
@@ -22,17 +22,35 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensor_map[unique_id].update_attributes(attributes)
 
     async_dispatcher_connect(
-        hass, f"npc_sensor_new_{usernpc}", handle_new_sensor
+        hass, f"evn_sensor_new_{userevn}", handle_new_sensor
     )
     async_dispatcher_connect(  # Thêm đăng ký tín hiệu attributes
-        hass, f"npc_sensor_attributes_{usernpc}", handle_sensor_attributes
+        hass, f"evn_sensor_attributes_{userevn}", handle_sensor_attributes
     )
     return True
 
-class NPCSensor(SensorEntity):
-    def __init__(self, hass, usernpc, sensor_type, unique_id, unit=None):
+VIETNAMESE_NAMES = {
+    "chi_so_dau_ky": "Chỉ số đầu kỳ",
+    "chi_so_cuoi_ky": "Chỉ số cuối kỳ",
+    "chi_so_tam_chot": "Chỉ số tạm chốt",
+    "tieu_thu_thang_nay": "Tiêu thụ tháng này",
+    "tieu_thu_hom_nay": "Tiêu thụ hôm nay",
+    "tieu_thu_hom_qua": "Tiêu thụ hôm qua",
+    "tieu_thu_hom_kia": "Tiêu thụ hôm kia",
+    "tieu_thu_thang_truoc": "Tiêu thụ tháng trước",
+    "tien_dien_thang_truoc": "Tiền điện tháng trước",
+    "tien_dien_thang_nay": "Tiền điện tháng này",
+    "lan_cap_nhat_cuoi": "Update Last",
+    "chi_tiet_dien_tieu_thu_thang_nay": "Chi tiết tháng này",
+    "tien_dien_san_luong_nam_nay": "Tiền điện sản lượng năm nay",
+    "lich_cat_dien": "Lịch cắt điện",
+    "cookie_status": "Trạng thái cookie",
+}
+
+class EVNSensor(SensorEntity):
+    def __init__(self, hass, userevn, sensor_type, unique_id, unit=None):
         self._hass = hass
-        self._usernpc = usernpc
+        self._userevn = userevn
         self._sensor_type = sensor_type
         self._unique_id = unique_id
         self._unit = unit
@@ -49,7 +67,10 @@ class NPCSensor(SensorEntity):
         
     @property
     def name(self):
-        return self._sensor_type.replace('_', ' ').title()
+        return VIETNAMESE_NAMES.get(
+            self._sensor_type, 
+            self._sensor_type.replace('_', ' ').title()
+        )
 
     @property
     def unique_id(self):
@@ -87,8 +108,8 @@ class NPCSensor(SensorEntity):
     @property
     def device_info(self):
         return {
-            "identifiers": {(DOMAIN, self._usernpc)},
-            "name": f"EVN VN Device ({self._usernpc})",
+            "identifiers": {(DOMAIN, self._userevn)},
+            "name": f"EVN VN Device ({self._userevn})",
             "manufacturer": "EVN VN",
             "model": "Electricity Meter",
         }
@@ -100,3 +121,9 @@ class NPCSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         return self._attributes
+    
+    @property
+    def device_class(self):
+        if self._sensor_type == "lan_cap_nhat_cuoi":
+            return "timestamp"
+        return None
