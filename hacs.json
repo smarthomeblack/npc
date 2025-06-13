@@ -2,6 +2,5 @@
   "name": "EVN VN",
   "domains": ["sensor"],
   "homeassistant": "2022.9.0",
-  "country": ["VN"],
   "render_readme": true
 }

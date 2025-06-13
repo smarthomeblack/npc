@@ -4,6 +4,9 @@
 ---
 
 ## 🚀 Cách sử dụng
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=smarthomeblack&repository=npc)
+
 - Tải về sau đó khởi động lại Home Assistant
 - Và0 Thiết Bị Thêm EVN VN, Điền userevn để hiển thị các cảm biến(chú ý đợi addon EVN VN chạy xong lần đầu và không lỗi)
 
