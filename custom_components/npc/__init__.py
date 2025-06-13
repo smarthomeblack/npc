@@ -5,7 +5,8 @@ from homeassistant.components import mqtt
 from homeassistant.const import CONF_USERNAME
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import DOMAIN
-
+DOMAIN = "npc"
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 UNIT_MAPPING = {
