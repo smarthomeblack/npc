@@ -3,9 +3,9 @@ from homeassistant.const import CONF_USERNAME, STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     userevn = config_entry.data[CONF_USERNAME]
-    entry_id = config_entry.entry_id
     sensor_map = {}
 
     async def handle_new_sensor(sensor_type, unique_id, payload, unit):
@@ -17,10 +17,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         else:
             sensor_map[unique_id].update_state(payload)
 
-    async def handle_sensor_attributes(sensor_type, unique_id, attributes):  # Thêm xử lý attributes
+    async def handle_sensor_attributes(sensor_type, unique_id, attributes):
         if unique_id in sensor_map:
             sensor_map[unique_id].update_attributes(attributes)
-
     async_dispatcher_connect(
         hass, f"evn_sensor_new_{userevn}", handle_new_sensor
     )
@@ -47,6 +46,7 @@ VIETNAMESE_NAMES = {
     "cookie_status": "Trạng thái cookie",
 }
 
+
 class EVNSensor(SensorEntity):
     def __init__(self, hass, userevn, sensor_type, unique_id, unit=None):
         self._hass = hass
@@ -60,11 +60,11 @@ class EVNSensor(SensorEntity):
     def update_state(self, payload):
         self._state = payload
         self.async_write_ha_state()
-    
+
     def update_attributes(self, attributes):
         self._attributes = attributes
         self.async_write_ha_state()
-        
+
     @property
     def name(self):
         return VIETNAMESE_NAMES.get(
@@ -117,11 +117,11 @@ class EVNSensor(SensorEntity):
     @property
     def should_poll(self):
         return False
-    
+
     @property
     def extra_state_attributes(self):
         return self._attributes
-    
+
     @property
     def device_class(self):
         if self._sensor_type == "lan_cap_nhat_cuoi":
