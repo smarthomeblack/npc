@@ -1,6 +1,5 @@
 {
   "name": "EVN VN",
-  "domains": ["sensor"],
-  "homeassistant": "2022.9.0",
-  "render_readme": true
+  "homeassistant": "2024.1.0",
+  "hacs": "1.0.0"
 }
