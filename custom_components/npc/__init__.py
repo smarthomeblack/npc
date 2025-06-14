@@ -4,6 +4,7 @@ from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_USERNAME
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 DOMAIN = "npc"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
