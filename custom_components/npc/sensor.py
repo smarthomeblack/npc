@@ -339,7 +339,7 @@ class EVNSensor(SensorEntity):
 
     @property
     def should_poll(self):
-        return False
+        return True
 
     async def async_update(self):
         pass
