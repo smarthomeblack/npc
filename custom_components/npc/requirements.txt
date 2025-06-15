@@ -1,2 +1,0 @@
-homeassistant==2022.9.0
-homeassistant.egg==info
