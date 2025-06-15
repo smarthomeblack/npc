@@ -1,4 +1,3 @@
-import os
 import logging
 import sqlite3
 from datetime import datetime, timedelta
@@ -7,7 +6,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 # Đường dẫn DB cho Home Assistant (dùng đường dẫn động để tương thích mọi môi trường)
-DB_PATH = os.path.join("/config", "evnvn", "evndata.db")
+DB_PATH = "./config/evnvn/evndata.db"
 
 
 def set_lancapnhapcuoi(hass, userevn, dt=None):
