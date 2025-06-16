@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Thiết lập EVN VN",
+        "data": {
+          "username": "Mã Khách Hàng",
+          "ngaydauky": "Ngày Đầu Kỳ"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "ngaydauky": "Ngày Đầu Kỳ"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_USERNAME, STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
+from calendar import monthrange
 from .const import DOMAIN
 from .utils import tinhngaydauky, laychisongay, laydientieuthungay, \
     laydientieuthuthang, laykhoangtieuthukynay, tinhtiendien, \
@@ -181,37 +182,39 @@ class EVNSensor(SensorEntity):
             # Nếu không có dữ liệu từ hóa đơn tháng, tính bằng chênh lệch chỉ số
             if san_luong is None:
                 _LOGGER.debug("Không có dữ liệu tieu_thu_ky_truoc từ hóa đơn, tính theo chỉ số")
-                # Tính ngày cuối kỳ trước và ngày cuối kỳ trước nữa
                 start_current, _, end_current, _ = tinhngaydauky(self._ngaydauky, today)
-                # Ngày cuối kỳ trước (kỳ trước đó)
                 if self._ngaydauky == 1:
                     if today.month == 1:
-                        # Tháng 1 thì kỳ trước là tháng 12 năm trước
                         end_prev = datetime(today.year - 1, 12, 31).date()
                     else:
-                        # Kỳ trước là cuối tháng trước
                         last_day = (datetime(today.year, today.month, 1) - timedelta(days=1)).day
                         end_prev = datetime(today.year, today.month - 1, last_day).date()
                 else:
-                    # Ngày đầu kỳ không phải là ngày 1
                     end_prev = start_current - timedelta(days=1)
-                # Ngày cuối kỳ trước nữa
                 if self._ngaydauky == 1:
                     if end_prev.month == 1:
-                        # Nếu kỳ trước là tháng 1, thì kỳ trước nữa là tháng 12 năm trước nữa
                         end_prev_prev = datetime(end_prev.year - 1, 12, 31).date()
                     else:
-                        # Kỳ trước nữa là cuối tháng trước kỳ trước
                         last_day = (datetime(end_prev.year, end_prev.month, 1) - timedelta(days=1)).day
                         end_prev_prev = datetime(end_prev.year, end_prev.month - 1, last_day).date()
                 else:
-                    # Kỳ trước nữa là ngày trước ngày đầu kỳ của kỳ trước
-                    prev_start = end_prev - (end_current - start_current)
+                    if end_prev.day < self._ngaydauky:
+                        if end_prev.month == 1:
+                            prev_start_month = 12
+                            prev_start_year = end_prev.year - 1
+                        else:
+                            prev_start_month = end_prev.month - 1
+                            prev_start_year = end_prev.year
+                    else:
+                        prev_start_month = end_prev.month
+                        prev_start_year = end_prev.year
+                    last_day_of_month = monthrange(prev_start_year, prev_start_month)[1]
+                    day_to_use = min(self._ngaydauky, last_day_of_month)
+                    prev_start = datetime(prev_start_year, prev_start_month, day_to_use).date()
                     end_prev_prev = prev_start - timedelta(days=1)
                 end_prev_str = end_prev.strftime('%d-%m-%Y')
                 end_prev_prev_str = end_prev_prev.strftime('%d-%m-%Y')
                 _LOGGER.debug(f"Ngày cuối kỳ trước: {end_prev_str}, Ngày cuối kỳ trước nữa: {end_prev_prev_str}")
-                # Lấy chỉ số cuối kỳ trước và cuối kỳ trước nữa
                 chi_so_prev = laychisongay(self._userevn, end_prev.strftime("%Y-%m-%d"))
                 chi_so_prev_prev = laychisongay(self._userevn, end_prev_prev.strftime("%Y-%m-%d"))
                 if chi_so_prev is not None and chi_so_prev_prev is not None:
@@ -221,9 +224,7 @@ class EVNSensor(SensorEntity):
                     self._attributes.update({
                         "Tính theo chỉ số": True,
                         "Chỉ số đầu kỳ trước": chi_so_prev_prev,
-                        "Chỉ số cuối kỳ trước": chi_so_prev,
-                        "Ngày đầu kỳ trước": end_prev_prev_str,
-                        "Ngày cuối kỳ trước": end_prev_str
+                        "Chỉ số cuối kỳ trước": chi_so_prev
                     })
             return san_luong if san_luong is not None else 0
         # Tiêu thụ kỳ trước nữa
@@ -271,13 +272,11 @@ class EVNSensor(SensorEntity):
                 if tieu_thu and tieu_thu > 0:
                     tien, tien_details = tinhtiendien(tieu_thu)
                     _LOGGER.debug(f"Tính tien_dien_ky_truoc theo công thức: {tieu_thu} kWh => {tien} VNĐ")
-                    # Lấy thêm thông tin từ sensor tieu_thu_ky_truoc để hiển thị
                     self._attributes.update({
                         "Tính theo công thức": True,
                         "Tiêu thụ": tieu_thu,
                         "Chi tiết tính tiền": tien_details
                     })
-                    # Bổ sung thêm thuộc tính từ sensor tieu_thu_ky_truoc nếu có
                     if hasattr(temp_sensor, '_attributes'):
                         for key, value in temp_sensor._attributes.items():
                             if key not in self._attributes:
