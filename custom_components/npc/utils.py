@@ -25,51 +25,6 @@ def get_lancapnhapcuoi(hass, userevn):
     except Exception:
         return None
 
-
-def tinhkytruoc(ngaydauky, today=None, ky_offset=1):
-    """
-    Trả về (ngày đầu kỳ, ngày cuối kỳ, tháng, năm) của kỳ trước hoặc kỳ trước nữa.
-    """
-    if today is None:
-        today = datetime.now().date()
-    elif hasattr(today, 'date'):
-        today = today.date()
-    # Tính ngày đầu kỳ hiện tại
-    start_current, _, _, _ = tinhngaydauky(ngaydauky, today)
-    prev_start = start_current
-    for _ in range(ky_offset):
-        if prev_start.month == 1:
-            prev_month = 12
-            prev_year = prev_start.year - 1
-        else:
-            prev_month = prev_start.month - 1
-            prev_year = prev_start.year
-        try:
-            prev_start = prev_start.replace(year=prev_year, month=prev_month, day=ngaydauky)
-        except ValueError:
-            from calendar import monthrange
-            last_day = monthrange(prev_year, prev_month)[1]
-            day_to_use = min(ngaydauky, last_day)
-            prev_start = prev_start.replace(year=prev_year, month=prev_month, day=day_to_use)
-    # Ngày đầu kỳ
-    start = prev_start
-    # Ngày đầu kỳ tiếp theo (để tính ngày cuối kỳ)
-    if start.month == 12:
-        next_month = 1
-        next_year = start.year + 1
-    else:
-        next_month = start.month + 1
-        next_year = start.year
-    try:
-        next_start = start.replace(year=next_year, month=next_month, day=ngaydauky)
-    except ValueError:
-        from calendar import monthrange
-        last_day = monthrange(next_year, next_month)[1]
-        day_to_use = min(ngaydauky, last_day)
-        next_start = start.replace(year=next_year, month=next_month, day=day_to_use)
-    end = next_start - timedelta(days=1)
-    return start, end, start.month, start.year
-
 # Hàm xác định ngày đầu kỳ, cuối kỳ
 
 

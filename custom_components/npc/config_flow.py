@@ -2,13 +2,20 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME
 import logging
+from homeassistant.helpers import selector
 
 _LOGGER = logging.getLogger(__name__)
 CONF_NGAYDAUKY = "ngaydauky"
 
 DATA_SCHEMA = vol.Schema({
     CONF_USERNAME: str,
-    CONF_NGAYDAUKY: vol.All(vol.Coerce(int), vol.Range(min=1, max=31)),
+    CONF_NGAYDAUKY: selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=1,
+            max=31,
+            mode=selector.NumberSelectorMode.BOX
+        )
+    ),
 })
 
 
@@ -56,8 +63,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
-                vol.Required(CONF_NGAYDAUKY, default=current_ngaydauky): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=31))
+                vol.Required(CONF_NGAYDAUKY, default=current_ngaydauky): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1,
+                        max=31,
+                        mode=selector.NumberSelectorMode.BOX
+                    )
+                )
             }),
             errors=errors
         )
