@@ -197,37 +197,107 @@ def laydientieuthuthang(userevn, month, year):
 
 
 def laychisongaygannhat(userevn, date_str, reverse=False):
-    date_str = dinhdangngay(date_str)
-    # Lấy ngày, tháng, năm từ date_str
-    if isinstance(date_str, str) and len(date_str) == 10 and date_str[2] == "-":
-        d, m, y = date_str.split("-")
-    else:
+    """
+    Lấy chỉ số điện ngày gần nhất trong tháng/năm của date_str
+    - userevn: mã khách hàng
+    - date_str: ngày dạng yyyy-mm-dd hoặc dd-mm-yyyy
+    - reverse: nếu True thì lấy ngày xa nhất, False thì lấy ngày gần nhất
+    """
+    # Fix lỗi date_str là None hoặc không đúng định dạng
+    if not date_str or not isinstance(date_str, str) or len(date_str) != 10:
+        _LOGGER.error(f"laychisongaygannhat: date_str không hợp lệ: {date_str}")
         return None, None
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    # Ưu tiên lấy ngày gần nhất trong tháng/năm hiện tại, nếu không có thì trả về None
-    query = (
-        "SELECT ngay, chi_so FROM daily_consumption "
-        "WHERE userevn=? AND ngay<=? "
-        "AND substr(ngay,4,2)=? AND substr(ngay,7,4)=? "
-        "AND chi_so IS NOT NULL AND chi_so != '' AND lower(chi_so) != 'không có dữ liệu' "
-        "ORDER BY ngay DESC LIMIT 1"
-    )
-    cursor.execute(query, (userevn, date_str, m, y))
-    row = cursor.fetchone()
-    conn.close()
-    _LOGGER.debug(f"laychisongaygannhat({userevn}, {date_str}, reverse={reverse}) => {row}")
-    if row and row[1] is not None:
-        try:
-            ngay = row[0]
-            # Nếu ngày là yyyy-mm-dd thì chuyển về dd-mm-yyyy
-            if isinstance(ngay, str) and len(ngay) == 10 and ngay[4] == "-":
-                y2, m2, d2 = ngay.split("-")
-                ngay = f"{d2}-{m2}-{y2}"
-            return float(row[1]), ngay
-        except (TypeError, ValueError):
+    # Tạo db_date (dd-mm-yyyy) từ date_str
+    if date_str[4] == '-':  # yyyy-mm-dd
+        y, m, d = date_str.split('-')
+        date_str_db = f"{d}-{m}-{y}"
+        _LOGGER.debug(f"laychisongaygannhat: Chuyển từ yyyy-mm-dd ({date_str}) -> dd-mm-yyyy ({date_str_db})")
+    elif date_str[2] == '-':  # dd-mm-yyyy
+        date_str_db = date_str
+        _LOGGER.debug(f"laychisongaygannhat: Giữ nguyên dd-mm-yyyy: {date_str_db}")
+    else:
+        _LOGGER.error(f"laychisongaygannhat: Định dạng date_str không đúng: {date_str}")
+        return None, None
+    # Lấy các thành phần ngày, tháng, năm
+    try:
+        d, m, y = date_str_db.split("-")
+        _LOGGER.debug(f"laychisongaygannhat: Trích xuất d={d}, m={m}, y={y} từ {date_str_db}")
+    except Exception as e:
+        _LOGGER.error(f"laychisongaygannhat: Lỗi tách date_str_db: {date_str_db}, lỗi: {str(e)}")
+        return None, None
+    # Thực hiện truy vấn DB
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        order_direction = "ASC" if reverse else "DESC"
+        order_by_clause = (
+            f"ORDER BY substr(ngay,7,4) {order_direction}, "
+            f"substr(ngay,4,2) {order_direction}, "
+            f"substr(ngay,1,2) {order_direction}"
+        )
+        query = (
+            "SELECT ngay, chi_so FROM daily_consumption "
+            "WHERE userevn=? "
+            "AND substr(ngay,4,2)=? AND substr(ngay,7,4)=? "
+            "AND chi_so IS NOT NULL AND chi_so != '' "
+            "AND lower(chi_so) != 'không có dữ liệu' AND chi_so != 'Khôngcódữliệu' "
+            f"{order_by_clause} LIMIT 1"
+        )
+        # Thực hiện truy vấn
+        _LOGGER.debug(f"laychisongaygannhat: SQL query: {query}")
+        _LOGGER.debug(f"laychisongaygannhat: Params: userevn={userevn}, thang={m}, nam={y}")
+        cursor.execute(query, (userevn, m, y))
+        row = cursor.fetchone()
+        _LOGGER.debug(f"laychisongaygannhat: Kết quả truy vấn: {row}")
+        # Nếu không tìm thấy, thử mở rộng tìm kiếm
+        if not row:
+            _LOGGER.debug("laychisongaygannhat: Thử tìm không giới hạn ngày")
+            query_alt = (
+                "SELECT ngay, chi_so FROM daily_consumption "
+                "WHERE userevn=? "
+                "AND chi_so IS NOT NULL AND chi_so != '' "
+                "AND lower(chi_so) != 'không có dữ liệu' AND chi_so != 'Khôngcódữliệu' "
+                f"{order_by_clause} LIMIT 1"
+            )
+            cursor.execute(query_alt, (userevn,))
+            row = cursor.fetchone()
+            _LOGGER.debug(f"laychisongaygannhat: Kết quả truy vấn mở rộng: {row}")
+            # Vẫn không tìm thấy, kiểm tra xem có bản ghi nào trong DB không để debug
+            if not row:
+                cursor.execute("SELECT COUNT(*) FROM daily_consumption WHERE userevn=?", (userevn,))
+                count_row = cursor.fetchone()
+                _LOGGER.debug(f"laychisongaygannhat: Tổng số bản ghi cho {userevn}: {count_row[0] if count_row else 0}")
+                # Kiểm tra một số bản ghi đầu tiên để xem dạng dữ liệu
+                cursor.execute(
+                    "SELECT ngay, chi_so FROM daily_consumption WHERE userevn=? LIMIT 5",
+                    (userevn,)
+                )
+                sample_rows = cursor.fetchall()
+                _LOGGER.debug(f"laychisongaygannhat: Mẫu dữ liệu: {sample_rows}")
+        conn.close()
+        if row and row[1] is not None:
+            try:
+                ngay = row[0]
+                # Kiểm tra thêm một lần nữa để đảm bảo không lấy dữ liệu không hợp lệ
+                if row[1] == "Khôngcódữliệu" or row[1].lower() == "không có dữ liệu":
+                    _LOGGER.debug(f"laychisongaygannhat: Bỏ qua dữ liệu không hợp lệ {row[1]}")
+                    return None, None
+                chi_so = float(row[1])
+                _LOGGER.debug(f"laychisongaygannhat: Thành công, ngày={ngay}, chỉ số={chi_so}")
+                return chi_so, ngay
+            except (TypeError, ValueError) as e:
+                _LOGGER.error(f"laychisongaygannhat: Lỗi chuyển đổi chỉ số: {row[1]}, lỗi: {str(e)}")
+                return None, None
+        else:
+            _LOGGER.debug(f"laychisongaygannhat: Không tìm thấy dữ liệu cho {userevn}, tháng={m}, năm={y}")
             return None, None
-    return None, None
+    except Exception as e:
+        _LOGGER.error(f"laychisongaygannhat: Lỗi truy vấn DB: {str(e)}")
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return None, None
 
 
 def laykhoangtieuthukynay(userevn, start_date, end_date):

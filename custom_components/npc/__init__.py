@@ -16,11 +16,6 @@ async def async_setup_entry(hass, entry):
     """Set up EVN VN from a config entry."""
     userevn = entry.data[CONF_USERNAME]
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"userevn": userevn}
-
-    # Không sử dụng listener để tránh crash khi reconfig
-    # entry.add_update_listener(async_reload_entry)
-
-    # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     return True
 

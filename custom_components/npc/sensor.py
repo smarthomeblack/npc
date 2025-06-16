@@ -5,7 +5,7 @@ from .const import DOMAIN
 from .utils import tinhngaydauky, laychisongay, laydientieuthungay, \
     laydientieuthuthang, laykhoangtieuthukynay, tinhtiendien, \
     layhoadon, set_lancapnhapcuoi, get_lancapnhapcuoi, \
-    laylichcatdien, laychisongaygannhat, tinhkytruoc
+    laylichcatdien, laychisongaygannhat
 from .config_flow import CONF_NGAYDAUKY
 from datetime import timedelta, datetime
 import logging
@@ -163,38 +163,74 @@ class EVNSensor(SensorEntity):
             return kwh if kwh is not None else 0
         # Tiêu thụ kỳ trước
         if self._sensor_type == "tieu_thu_ky_truoc":
-            start, end, prev_month, prev_year = tinhkytruoc(self._ngaydauky, today, 1)
-            _, san_luong = laydientieuthuthang(self._userevn, prev_month, prev_year)
+            if self._ngaydauky == 1:
+                thang = today.month - 1 if today.month > 1 else 12
+                nam = today.year if today.month > 1 else today.year - 1
+            else:
+                if today.day < self._ngaydauky:
+                    thang = today.month - 1 if today.month > 1 else 12
+                    nam = today.year if today.month > 1 else today.year - 1
+                else:
+                    thang = today.month
+                    nam = today.year
+            _, san_luong = laydientieuthuthang(self._userevn, thang, nam)
             self._attributes = {
-                "Bắt đầu": start.strftime("%d-%m-%Y"),
-                "Kết thúc": end.strftime("%d-%m-%Y")
+                "Tháng": f"{thang:02d}",
+                "Năm": str(nam)
             }
             return san_luong if san_luong is not None else 0
         # Tiêu thụ kỳ trước nữa
         if self._sensor_type == "tieu_thu_ky_truoc_nua":
-            start, end, prev_month, prev_year = tinhkytruoc(self._ngaydauky, today, 2)
-            _, san_luong = laydientieuthuthang(self._userevn, prev_month, prev_year)
+            if self._ngaydauky == 1:
+                thang = today.month - 2 if today.month > 2 else (12 if today.month == 1 else 11)
+                nam = today.year if today.month > 2 else today.year - 1
+            else:
+                if today.day < self._ngaydauky:
+                    thang = today.month - 2 if today.month > 2 else (12 if today.month == 1 else 11)
+                    nam = today.year if today.month > 2 else today.year - 1
+                else:
+                    thang = today.month - 1 if today.month > 1 else 12
+                    nam = today.year if today.month > 1 else today.year - 1
+            _, san_luong = laydientieuthuthang(self._userevn, thang, nam)
             self._attributes = {
-                "Bắt đầu": start.strftime("%d-%m-%Y"),
-                "Kết thúc": end.strftime("%d-%m-%Y")
+                "Tháng": f"{thang:02d}",
+                "Năm": str(nam)
             }
             return san_luong if san_luong is not None else 0
         # Tiền điện kỳ trước
         if self._sensor_type == "tien_dien_ky_truoc":
-            start, end, prev_month, prev_year = tinhkytruoc(self._ngaydauky, today, 1)
-            tien, _ = laydientieuthuthang(self._userevn, prev_month, prev_year)
+            if self._ngaydauky == 1:
+                thang = today.month - 1 if today.month > 1 else 12
+                nam = today.year if today.month > 1 else today.year - 1
+            else:
+                if today.day < self._ngaydauky:
+                    thang = today.month - 1 if today.month > 1 else 12
+                    nam = today.year if today.month > 1 else today.year - 1
+                else:
+                    thang = today.month
+                    nam = today.year
+            tien, _ = laydientieuthuthang(self._userevn, thang, nam)
             self._attributes = {
-                "Bắt đầu": start.strftime("%d-%m-%Y"),
-                "Kết thúc": end.strftime("%d-%m-%Y")
+                "Tháng": f"{thang:02d}",
+                "Năm": str(nam)
             }
             return tien if tien is not None else 0
         # Tiền điện kỳ trước nữa
         if self._sensor_type == "tien_dien_ky_truoc_nua":
-            start, end, prev_month, prev_year = tinhkytruoc(self._ngaydauky, today, 2)
-            tien, _ = laydientieuthuthang(self._userevn, prev_month, prev_year)
+            if self._ngaydauky == 1:
+                thang = today.month - 2 if today.month > 2 else (12 if today.month == 1 else 11)
+                nam = today.year if today.month > 2 else today.year - 1
+            else:
+                if today.day < self._ngaydauky:
+                    thang = today.month - 2 if today.month > 2 else (12 if today.month == 1 else 11)
+                    nam = today.year if today.month > 2 else today.year - 1
+                else:
+                    thang = today.month - 1 if today.month > 1 else 12
+                    nam = today.year if today.month > 1 else today.year - 1
+            tien, _ = laydientieuthuthang(self._userevn, thang, nam)
             self._attributes = {
-                "Bắt đầu": start.strftime("%d-%m-%Y"),
-                "Kết thúc": end.strftime("%d-%m-%Y")
+                "Tháng": f"{thang:02d}",
+                "Năm": str(nam)
             }
             return tien if tien is not None else 0
         # Chi tiết tiêu thụ kỳ này
