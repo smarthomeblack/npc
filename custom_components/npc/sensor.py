@@ -94,41 +94,46 @@ class EVNSensor(SensorEntity):
         # Cập nhật thời gian mỗi lần bất kỳ cảm biến nào được truy cập
         set_lancapnhapcuoi(self._hass, self._userevn)
         today = dt_util.now().date()
+
+        def format_kwh(value):
+            if value is None:
+                return 0
+            # Trả về int nếu là số nguyên, nếu không thì trả về round(value, 2) và loại bỏ phần thập phân dư thừa
+            rounded = round(value, 2)
+            return int(rounded) if rounded == int(rounded) else rounded
         # Chỉ số đầu kỳ
         if self._sensor_type == "chi_so_dau_ky":
             start, _, _, _ = tinhngaydauky(self._ngaydauky, today)
             chi_so = laychisongay(self._userevn, start.strftime("%Y-%m-%d"))
             self._attributes = {"Ngày": start.strftime("%d-%m-%Y")}
-            return chi_so if chi_so is not None else 0
+            return format_kwh(chi_so)
         # Chỉ số cuối kỳ trước
         if self._sensor_type == "chi_so_cuoi_ky":
             _, _, _, prev_end_ky = tinhngaydauky(self._ngaydauky, today)
             chi_so = laychisongay(self._userevn, prev_end_ky.strftime("%Y-%m-%d"))
             self._attributes = {"Ngày": prev_end_ky.strftime("%d-%m-%Y")}
-            return chi_so if chi_so is not None else 0
+            return format_kwh(chi_so)
         if self._sensor_type == "chi_so_tam_chot":
             chi_so, ngay = laychisongaygannhat(self._userevn, today.strftime("%Y-%m-%d"))
             if chi_so is not None:
-                # ngay có thể đã là string, cần convert về date trước khi format lại
                 try:
                     ngay_fmt = datetime.strptime(ngay, "%Y-%m-%d").strftime("%d-%m-%Y")
                 except Exception:
                     ngay_fmt = ngay
                 self._attributes = {"Ngày": ngay_fmt}
-                return chi_so
+                return format_kwh(chi_so)
             return 0
         # Tiêu thụ kỳ này: chỉ số tạm chốt - chỉ số cuối kỳ trước
         if self._sensor_type == "tieu_thu_ky_nay":
             _, _, _, prev_end_ky = tinhngaydauky(self._ngaydauky, today)
             chi_so_prev = laychisongay(self._userevn, prev_end_ky.strftime("%Y-%m-%d"))
             chi_so_tam_chot, _ = laychisongaygannhat(self._userevn, today.strftime("%Y-%m-%d"))
-
             if chi_so_tam_chot is not None and chi_so_prev is not None:
                 self._attributes = {
                     "Bắt đầu": tinhngaydauky(self._ngaydauky, today)[0].strftime("%d-%m-%Y"),
                     "Kết thúc": today.strftime("%d-%m-%Y")
                 }
-                return chi_so_tam_chot - chi_so_prev
+                return format_kwh(chi_so_tam_chot - chi_so_prev)
             return 0
         # Tiền điện kỳ này: tiêu thụ kỳ này nhân công thức tính tiền điện
         if self._sensor_type == "tien_dien_ky_nay":
@@ -141,27 +146,27 @@ class EVNSensor(SensorEntity):
                 self._attributes = {
                     "Bắt đầu": tinhngaydauky(self._ngaydauky, today)[0].strftime("%d-%m-%Y"),
                     "Kết thúc": today.strftime("%d-%m-%Y"),
-                    "Tiêu thụ": tieu_thu
+                    "Tiêu thụ": round(tieu_thu, 2)
                 }
-                return tongtien if tongtien is not None else 0
+                return int(round(tongtien, 0)) if tongtien is not None else 0
             return 0
         # Tiêu thụ hôm nay
         if self._sensor_type == "tieu_thu_hom_nay":
             kwh = laydientieuthungay(self._userevn, today.strftime("%Y-%m-%d"))
             self._attributes = {"Ngày": today.strftime("%d-%m-%Y")}
-            return kwh if kwh is not None else 0
+            return format_kwh(kwh)
         # Tiêu thụ hôm qua
         if self._sensor_type == "tieu_thu_hom_qua":
             yesterday = today - timedelta(days=1)
             kwh = laydientieuthungay(self._userevn, yesterday.strftime("%Y-%m-%d"))
             self._attributes = {"Ngày": yesterday.strftime("%d-%m-%Y")}
-            return kwh if kwh is not None else 0
+            return format_kwh(kwh)
         # Tiêu thụ hôm kia
         if self._sensor_type == "tieu_thu_hom_kia":
             day_before = today - timedelta(days=2)
             kwh = laydientieuthungay(self._userevn, day_before.strftime("%Y-%m-%d"))
             self._attributes = {"Ngày": day_before.strftime("%d-%m-%Y")}
-            return kwh if kwh is not None else 0
+            return format_kwh(kwh)
         # Tiêu thụ kỳ trước
         if self._sensor_type == "tieu_thu_ky_truoc":
             if self._ngaydauky == 1:
@@ -179,7 +184,6 @@ class EVNSensor(SensorEntity):
                 "Tháng": f"{thang:02d}",
                 "Năm": str(nam)
             }
-            # Nếu không có dữ liệu từ hóa đơn tháng, tính bằng chênh lệch chỉ số
             if san_luong is None:
                 _LOGGER.debug("Không có dữ liệu tieu_thu_ky_truoc từ hóa đơn, tính theo chỉ số")
                 start_current, _, end_current, _ = tinhngaydauky(self._ngaydauky, today)
@@ -220,13 +224,12 @@ class EVNSensor(SensorEntity):
                 if chi_so_prev is not None and chi_so_prev_prev is not None:
                     san_luong = chi_so_prev - chi_so_prev_prev
                     _LOGGER.debug(f"Tính tieu_thu_ky_truoc: {chi_so_prev} - {chi_so_prev_prev} = {san_luong}")
-                    # Thêm thông tin vào attributes
                     self._attributes.update({
                         "Tính theo chỉ số": True,
-                        "Chỉ số đầu kỳ trước": chi_so_prev_prev,
-                        "Chỉ số cuối kỳ trước": chi_so_prev
+                        "Chỉ số đầu kỳ trước": format_kwh(chi_so_prev_prev),
+                        "Chỉ số cuối kỳ trước": format_kwh(chi_so_prev)
                     })
-            return san_luong if san_luong is not None else 0
+            return format_kwh(san_luong)
         # Tiêu thụ kỳ trước nữa
         if self._sensor_type == "tieu_thu_ky_truoc_nua":
             if self._ngaydauky == 1:
@@ -244,7 +247,7 @@ class EVNSensor(SensorEntity):
                 "Tháng": f"{thang:02d}",
                 "Năm": str(nam)
             }
-            return san_luong if san_luong is not None else 0
+            return format_kwh(san_luong)
         # Tiền điện kỳ trước
         if self._sensor_type == "tien_dien_ky_truoc":
             if self._ngaydauky == 1:
@@ -274,14 +277,14 @@ class EVNSensor(SensorEntity):
                     _LOGGER.debug(f"Tính tien_dien_ky_truoc theo công thức: {tieu_thu} kWh => {tien} VNĐ")
                     self._attributes.update({
                         "Tính theo công thức": True,
-                        "Tiêu thụ": tieu_thu,
+                        "Tiêu thụ": round(tieu_thu, 2),
                         "Chi tiết tính tiền": tien_details
                     })
                     if hasattr(temp_sensor, '_attributes'):
                         for key, value in temp_sensor._attributes.items():
                             if key not in self._attributes:
                                 self._attributes[key] = value
-            return tien if tien is not None else 0
+            return int(round(tien, 0)) if tien is not None else 0
         # Tiền điện kỳ trước nữa
         if self._sensor_type == "tien_dien_ky_truoc_nua":
             if self._ngaydauky == 1:
@@ -299,7 +302,7 @@ class EVNSensor(SensorEntity):
                 "Tháng": f"{thang:02d}",
                 "Năm": str(nam)
             }
-            return tien if tien is not None else 0
+            return int(round(tien, 0)) if tien is not None else 0
         # Chi tiết tiêu thụ kỳ này
         if self._sensor_type == "chi_tiet_dien_tieu_thu_ky_nay":
             today = dt_util.now().date()

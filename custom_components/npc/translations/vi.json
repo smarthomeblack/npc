@@ -2,19 +2,35 @@
   "config": {
     "step": {
       "user": {
-        "title": "Thiết lập EVN VN",
+        "title": "⚡ Thiết lập EVN Việt Nam",
         "data": {
-          "username": "Mã Khách Hàng",
-          "ngaydauky": "Ngày Đầu Kỳ"
-        }
+          "username": "🆔 Mã khách hàng EVN",
+          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
+        },
+        "data_description": {
+          "username": "Nhập mã khách hàng ghi trên hóa đơn điện của bạn",
+          "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)"
+        },
+        "description": "### 🏠 Chào mừng đến với EVN Integration!\n\nVui lòng nhập thông tin để kết nối với dịch vụ EVN:\n\n#### 📋 Yêu cầu mã khách hàng:\n• **Bắt đầu**: Chữ cái `P` hoặc `S`\n• **Độ dài**: Tối thiểu 11 ký tự\n• **Ví dụ**: `PE06800012345`\n\n💡 *Mã khách hàng được tìm thấy trên hóa đơn tiền điện của bạn*"
       }
+    },
+    "abort": {
+      "already_configured": "🔄 Mã khách hàng đã được thiết lập!\n\n✅ **Mã khách hàng `{title}` đã tồn tại trong hệ thống**\n\n🎯 **Các lựa chọn của bạn:**\n• **Sửa cài đặt**: Vào *Cấu hình* → *Thiết lập lại ngày đầu kỳ*\n• **Xóa và tạo lại**: Xóa mã khách hàng cũ trước khi thêm mới\n• **Sử dụng mã khác**: Nhập mã khách hàng khác\n\n💡 *Mỗi mã khách hàng chỉ có thể được cấu hình một lần*"
+    },
+    "error": {
+      "invalid_evn_code": "❌ Mã khách hàng không hợp lệ!\n\n✅ Định dạng đúng:\n• Bắt đầu bằng P hoặc S\n• Có ít nhất 11 ký tự\n• Ví dụ: PE06800012345",
+      "customer_not_found": "🔍 Mã khách hàng không tồn tại!\n\n❗ Lý do có thể:\n• Nhập sai mã khách hàng của tài khoản\n• Addon EVN VN chạy lỗi\n• Addon EVN VN chưa lấy xong dữ liệu\n\n💬 Vui lòng kiểm tra lại hoặc liên hệ Zalo Black"
     }
   },
   "options": {
     "step": {
       "init": {
+        "title": "⚙️ Cài đặt EVN",
         "data": {
-          "ngaydauky": "Ngày Đầu Kỳ"
+          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
+        },
+        "data_description": {
+          "ngaydauky": "Điều chỉnh ngày bắt đầu chu kỳ thanh toán"
         }
       }
     }

@@ -2,19 +2,35 @@
   "config": {
     "step": {
       "user": {
-        "title": "Thiết lập EVN VN",
+        "title": "⚡ Setup EVN Vietnam",
         "data": {
-          "username": "Mã Khách Hàng",
-          "ngaydauky": "Ngày Đầu Kỳ"
-        }
+          "username": "🆔 EVN Customer Code",
+          "ngaydauky": "📅 Billing Start Day"
+        },
+        "data_description": {
+          "username": "Enter your customer code from EVN electricity bill",
+          "ngaydauky": "Select billing cycle start day (usually day 1-28)"
+        },
+        "description": "### 🏠 Welcome to EVN Integration!\n\nPlease enter your information to connect with EVN service:\n\n#### 📋 Customer Code Requirements:\n• **Start with**: Letter `P` or `S`\n• **Length**: Minimum 11 characters\n• **Example**: `PE06800012345`\n\n💡 *Customer code can be found on your electricity bill*"
       }
+    },
+    "abort": {
+      "already_configured": "🔄 Customer code already configured!\n\n✅ **Customer code `{title}` already exists in system**\n\n🎯 **Your options:**\n• **Edit settings**: Go to *Configuration* → *Reset billing start day*\n• **Remove and recreate**: Delete old customer code before adding new one\n• **Use different code**: Enter another customer code\n\n💡 *Each customer code can only be configured once*"
+    },
+    "error": {
+      "invalid_evn_code": "❌ Invalid customer code!\n\n✅ Correct format:\n• Must start with P or S\n• Must have at least 11 characters\n• Example: PE06800012345",
+      "customer_not_found": "🔍 Customer code not found!\n\n❗ Possible reasons:\n• Incorrect customer code entered\n• EVN VN Addon error\n• EVN VN Addon still fetching data\n\n💬 Please check again or contact Zalo Black"
     }
   },
   "options": {
     "step": {
       "init": {
+        "title": "⚙️ EVN Settings",
         "data": {
-          "ngaydauky": "Ngày Đầu Kỳ"
+          "ngaydauky": "📅 Billing Start Day"
+        },
+        "data_description": {
+          "ngaydauky": "Adjust billing cycle start day"
         }
       }
     }

@@ -88,6 +88,22 @@ def tinhtiendien(kwh):
 # Hàm truy vấn dữ liệu từ SQLite
 
 
+def chuyen_doi_so(value):
+    """Chuyển đổi số từ format Việt Nam (dấu phẩy) sang format Python (dấu chấm)"""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        # Loại bỏ khoảng trắng và chuyển dấu phẩy thành dấu chấm
+        value = value.strip().replace(',', '.')
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
 def dinhdangngay(date_str):
     # Chuyển yyyy-mm-dd -> dd-mm-yyyy nếu đúng định dạng
     if isinstance(date_str, str) and len(date_str) == 10 and date_str[4] == "-":
@@ -109,10 +125,7 @@ def laychisongay(userevn, date_str):
     _LOGGER.debug(f"laychisongay({userevn}, {date_str}) => {row}")
     if not row or row[0] is None or str(row[0]).strip().lower() == "không có dữ liệu":
         return None
-    try:
-        return float(row[0])
-    except (TypeError, ValueError):
-        return None
+    return chuyen_doi_so(row[0])
 
 
 def laydientieuthungay(userevn, date_str):
@@ -128,10 +141,7 @@ def laydientieuthungay(userevn, date_str):
     _LOGGER.debug(f"laydientieuthungay({userevn}, {date_str}) => {row}")
     if not row or row[0] is None or str(row[0]).strip().lower() == "không có dữ liệu":
         return None
-    try:
-        return float(row[0])
-    except (TypeError, ValueError):
-        return None
+    return chuyen_doi_so(row[0])
 
 
 def laydientieuthuthang(userevn, month, year):
@@ -145,7 +155,7 @@ def laydientieuthuthang(userevn, month, year):
     conn.close()
     _LOGGER.debug(f"laydientieuthuthang({userevn}, {month}, {year}) => {row}")
     if row:
-        return float(row[0]) if row[0] is not None else None, float(row[1]) if row[1] is not None else None
+        return chuyen_doi_so(row[0]), chuyen_doi_so(row[1])
     return None, None
 
 
@@ -235,7 +245,10 @@ def laychisongaygannhat(userevn, date_str, reverse=False):
                 if row[1] == "Khôngcódữliệu" or row[1].lower() == "không có dữ liệu":
                     _LOGGER.debug(f"laychisongaygannhat: Bỏ qua dữ liệu không hợp lệ {row[1]}")
                     return None, None
-                chi_so = float(row[1])
+                chi_so = chuyen_doi_so(row[1])
+                if chi_so is None:
+                    _LOGGER.error(f"laychisongaygannhat: Lỗi chuyển đổi chỉ số: {row[1]}")
+                    return None, None
                 _LOGGER.debug(f"laychisongaygannhat: Thành công, ngày={ngay}, chỉ số={chi_so}")
                 return chi_so, ngay
             except (TypeError, ValueError) as e:
