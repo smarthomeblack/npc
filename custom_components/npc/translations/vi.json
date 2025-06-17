@@ -4,6 +4,28 @@
       "user": {
         "title": "⚡ Thiết lập EVN Việt Nam",
         "data": {
+          "phuong_thuc": "🛠️ Phương thức thiết lập"
+        },
+        "data_description": {
+          "phuong_thuc": "Chọn cách thêm mã khách hàng EVN"
+        },
+        "description": "{method_info}"
+      },
+      "auto": {
+        "title": "🤖 Thiết lập Tự Động",
+        "data": {
+          "username": "🆔 Mã khách hàng EVN",
+          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
+        },
+        "data_description": {
+          "username": "Chọn mã khách hàng từ danh sách có sẵn",
+          "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)"
+        },
+        "description": "{auto_info}"
+      },
+      "manual": {
+        "title": "✏️ Thiết lập Thủ Công",
+        "data": {
           "username": "🆔 Mã khách hàng EVN",
           "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
         },

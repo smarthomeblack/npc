@@ -4,6 +4,28 @@
       "user": {
         "title": "⚡ Setup EVN Vietnam",
         "data": {
+          "phuong_thuc": "🛠️ Setup Method"
+        },
+        "data_description": {
+          "phuong_thuc": "Choose how to add EVN customer code"
+        },
+        "description": "{method_info}"
+      },
+      "auto": {
+        "title": "🤖 Automatic Setup",
+        "data": {
+          "username": "🆔 EVN Customer Code",
+          "ngaydauky": "📅 Billing Start Day"
+        },
+        "data_description": {
+          "username": "Select customer code from available list",
+          "ngaydauky": "Select billing cycle start day (usually day 1-28)"
+        },
+        "description": "{auto_info}"
+      },
+      "manual": {
+        "title": "✏️ Manual Setup",
+        "data": {
           "username": "🆔 EVN Customer Code",
           "ngaydauky": "📅 Billing Start Day"
         },
