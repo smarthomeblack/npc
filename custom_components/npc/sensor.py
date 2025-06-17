@@ -2,14 +2,17 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_USERNAME, STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
 from calendar import monthrange
+from datetime import timedelta, datetime
+import logging
 from .const import DOMAIN
 from .utils import tinhngaydauky, laychisongay, laydientieuthungay, \
     laydientieuthuthang, laykhoangtieuthukynay, tinhtiendien, \
     layhoadon, set_lancapnhapcuoi, get_lancapnhapcuoi, \
     laylichcatdien, laychisongaygannhat
 from .config_flow import CONF_NGAYDAUKY
-from datetime import timedelta, datetime
-import logging
+
+# Thời gian scan file DB
+SCAN_INTERVAL = timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
 

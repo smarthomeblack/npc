@@ -10,8 +10,7 @@
           "phuong_thuc": "Chọn cách thêm mã khách hàng EVN"
         },
         "description": "{method_info}"
-      },
-      "auto": {
+      },      "auto": {
         "title": "🤖 Thiết lập Tự Động",
         "data": {
           "username": "🆔 Mã khách hàng EVN",
@@ -21,7 +20,7 @@
           "username": "Chọn mã khách hàng từ danh sách có sẵn",
           "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)"
         },
-        "description": "{auto_info}"
+        "description": "### 🤖 Thiết lập Tự Động\n\n✅ Đã tìm thấy dữ liệu từ EVN VN Addon\n📊 Nguồn dữ liệu: EVN VN Addon Database\n🔄 Đồng bộ: Tự động cập nhật từ addon\n\n**Chọn mã khách hàng và ngày đầu kỳ:**"
       },
       "manual": {
         "title": "✏️ Thiết lập Thủ Công",
@@ -32,8 +31,31 @@
         "data_description": {
           "username": "Nhập mã khách hàng ghi trên hóa đơn điện của bạn",
           "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)"
+        },        "description": "### ✏️ Thiết lập Thủ Công\n\n📝 **Nhập mã khách hàng EVN**\n🔍 **Format**: Bắt đầu bằng P hoặc S, tối thiểu 11 ký tự\n💫 **Smart Preview**: Dữ liệu sẽ hiển thị sau khi validation thành công\n\n**Nhập thông tin:**"
+      },
+      "preview_auto": {
+        "title": "📊 Preview - Auto Mode",
+        "data": {
+          "confirm": "✅ Xác nhận tạo sensor",
+          "back": "🔙 Quay lại chỉnh sửa"
         },
-        "description": "### 🏠 Chào mừng đến với EVN Integration!\n\nVui lòng nhập thông tin để kết nối với dịch vụ EVN:\n\n#### 📋 Yêu cầu mã khách hàng:\n• **Bắt đầu**: Chữ cái `P` hoặc `S`\n• **Độ dài**: Tối thiểu 11 ký tự\n• **Ví dụ**: `PE06800012345`\n\n💡 *Mã khách hàng được tìm thấy trên hóa đơn tiền điện của bạn*"
+        "data_description": {
+          "confirm": "Tạo sensor với dữ liệu đã xem trước",
+          "back": "Quay lại để chọn lại mã khách hàng hoặc ngày đầu kỳ"
+        },
+        "description": "{preview_info}"
+      },
+      "preview_manual": {
+        "title": "📊 Preview - Manual Mode", 
+        "data": {
+          "confirm": "✅ Xác nhận tạo sensor",
+          "back": "🔙 Quay lại chỉnh sửa"
+        },
+        "data_description": {
+          "confirm": "Tạo sensor với dữ liệu đã xem trước",
+          "back": "Quay lại để sửa lại mã khách hàng hoặc ngày đầu kỳ"
+        },
+        "description": "{preview_info}"
       }
     },
     "abort": {

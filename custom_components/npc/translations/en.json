@@ -10,8 +10,7 @@
           "phuong_thuc": "Choose how to add EVN customer code"
         },
         "description": "{method_info}"
-      },
-      "auto": {
+      },      "auto": {
         "title": "🤖 Automatic Setup",
         "data": {
           "username": "🆔 EVN Customer Code",
@@ -21,7 +20,7 @@
           "username": "Select customer code from available list",
           "ngaydauky": "Select billing cycle start day (usually day 1-28)"
         },
-        "description": "{auto_info}"
+        "description": "### 🤖 Automatic Setup\n\n✅ Found data from EVN VN Addon\n📊 Data source: EVN VN Addon Database\n🔄 Sync: Auto update from addon\n\n**Select customer code and billing start day:**"
       },
       "manual": {
         "title": "✏️ Manual Setup",
@@ -32,8 +31,31 @@
         "data_description": {
           "username": "Enter your customer code from EVN electricity bill",
           "ngaydauky": "Select billing cycle start day (usually day 1-28)"
+        },        "description": "### ✏️ Manual Setup\n\n📝 **Enter EVN Customer Code**\n🔍 **Format**: Must start with P or S, minimum 11 characters\n💫 **Smart Preview**: Data will show after validation succeeds\n\n**Enter information:**"
+      },
+      "preview_auto": {
+        "title": "📊 Data Preview - Auto Mode",
+        "data": {
+          "confirm": "✅ Confirm create sensor",
+          "back": "🔙 Go back to edit"
         },
-        "description": "### 🏠 Welcome to EVN Integration!\n\nPlease enter your information to connect with EVN service:\n\n#### 📋 Customer Code Requirements:\n• **Start with**: Letter `P` or `S`\n• **Length**: Minimum 11 characters\n• **Example**: `PE06800012345`\n\n💡 *Customer code can be found on your electricity bill*"
+        "data_description": {
+          "confirm": "Create sensor with previewed data",
+          "back": "Go back to select different customer code or billing day"
+        },
+        "description": "{preview_info}"
+      },
+      "preview_manual": {
+        "title": "📊 Data Preview - Manual Mode",
+        "data": {
+          "confirm": "✅ Confirm create sensor",
+          "back": "🔙 Go back to edit"
+        },
+        "data_description": {
+          "confirm": "Create sensor with previewed data",
+          "back": "Go back to modify customer code or billing day"
+        },
+        "description": "{preview_info}"
       }
     },
     "abort": {
