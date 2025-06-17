@@ -1,0 +1,60 @@
+Dưới đây là đoạn code được sửa cho phần xử lý `end_prev_prev` trong sensor "tieu_thu_ky_truoc":
+
+```python
+                else:
+                    # Kỳ trước nữa là ngày trước ngày đầu kỳ của kỳ trước
+                    # Tính ngày đầu kỳ của kỳ trước
+                    if end_prev.day < self._ngaydauky:
+                        # Nếu ngày cuối kỳ trước < ngày đầu kỳ, thì đầu kỳ trước là tháng trước của end_prev
+                        if end_prev.month == 1:
+                            prev_start_month = 12
+                            prev_start_year = end_prev.year - 1
+                        else:
+                            prev_start_month = end_prev.month - 1
+                            prev_start_year = end_prev.year
+                    else:
+                        # Ngày đầu kỳ trước là trong cùng tháng với end_prev
+                        prev_start_month = end_prev.month
+                        prev_start_year = end_prev.year
+                    
+                    # Xử lý trường hợp ngày không tồn tại trong tháng
+                    from calendar import monthrange
+                    last_day_of_month = monthrange(prev_start_year, prev_start_month)[1]
+                    day_to_use = min(self._ngaydauky, last_day_of_month)
+                    
+                    # Ngày đầu kỳ của kỳ trước
+                    prev_start = datetime(prev_start_year, prev_start_month, day_to_use).date()
+                    
+                    # Ngày cuối kỳ trước nữa là ngày trước ngày đầu kỳ của kỳ trước
+                    end_prev_prev = prev_start - timedelta(days=1)
+```
+
+Thay đoạn code hiện tại bắt đầu từ dòng:
+```python
+                else:
+                    # Kỳ trước nữa là ngày trước ngày đầu kỳ của kỳ trước
+                    prev_start = end_prev - (end_current - start_current)
+                    end_prev_prev = prev_start - timedelta(days=1)
+```
+
+Ngoài ra, cập nhật lại đoạn hiển thị trong attributes ở dòng 240-245 để phản ánh đúng:
+```python
+                    self._attributes.update({
+                        "Tính theo chỉ số": True,
+                        "Chỉ số cuối kỳ trước nữa": chi_so_prev_prev,
+                        "Chỉ số cuối kỳ trước": chi_so_prev,
+                        "Ngày cuối kỳ trước nữa": end_prev_prev_str,
+                        "Ngày cuối kỳ trước": end_prev_str
+                    })
+```
+
+thay vì:
+```python
+                    self._attributes.update({
+                        "Tính theo chỉ số": True,
+                        "Chỉ số đầu kỳ trước": chi_so_prev_prev,
+                        "Chỉ số cuối kỳ trước": chi_so_prev,
+                        "Ngày đầu kỳ trước": end_prev_prev_str,
+                        "Ngày cuối kỳ trước": end_prev_str
+                    })
+```
