@@ -10,9 +10,13 @@
 - Tải về sau đó khởi động lại Home Assistant
 - Và0 Thiết Bị Thêm EVN VN, Điền Mã Khách Hàng(dù đăng nhập bằng SĐT ở addon thì chỗ này cũng buộc điền Mã Khách Hàng) để hiển thị các cảm biến(chú ý đợi addon EVN VN chạy xong lần đầu và không lỗi)
 
-<img title="Thêm EVN VN" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evn1.png" width="250px"></img>
-<img title="Cấu Hình Mã Khách Hàng" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evn2.png" width="250px"></img>
-<img title="Các Cảm Biến Riêng Cho Từng User" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evn3.png" width="250px"></img>
+<img title="EVNVN VN" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evnvn/1.png" width="100%"></img>
+
+<img title="EVNVN VN" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evnvn/2.png" width="100%"></img>
+
+<img title="EVNVN VN" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evnvn/3.png" width="100%"></img>
+
+<img title="EVNVN VN" src="https://raw.githubusercontent.com/smarthomeblack/npc/refs/heads/main/evnvn/4.png" width="100%"></img>
 
 ## ❤️ Đóng góp
 
