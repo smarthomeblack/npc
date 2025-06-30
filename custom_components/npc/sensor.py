@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "tieu_thu_ky_truoc_nua", "tien_dien_ky_truoc_nua",
         "tieu_thu_hom_nay", "tieu_thu_hom_qua", "tieu_thu_hom_kia",
         "chi_tiet_dien_tieu_thu_ky_nay", "tien_dien_san_luong_nam_nay",
-        "lich_cat_dien", "lan_cap_nhat_cuoi"
+        "lich_cat_dien", "lan_cap_nhat_cuoi", "tien_no"
     ]
     entities = []
     for sensor_type in SENSOR_TYPES:
@@ -71,6 +71,7 @@ VIETNAMESE_NAMES = {
     "lich_cat_dien": "Lịch cắt điện",
     "lan_cap_nhat_cuoi": "Update Last",
     "hoa_don": "Hóa đơn",
+    "tien_no": "Tiền nợ",
 }
 
 
@@ -422,6 +423,16 @@ class EVNSensor(SensorEntity):
                 return last_update.isoformat()
             else:
                 return None
+        # Tiền nợ
+        if self._sensor_type == "tien_no":
+            from .utils import lay_tien_no_evn
+            tien_no, ngay_cap_nhat = lay_tien_no_evn(self._userevn)
+            if tien_no is not None:
+                self._attributes = {"Ngày cập nhật": ngay_cap_nhat}
+                return tien_no
+            else:
+                self._attributes = {}
+                return 0
 
     @property
     def icon(self):
@@ -441,6 +452,7 @@ class EVNSensor(SensorEntity):
             "lan_cap_nhat_cuoi": "mdi:clock-time-eight",
             "chi_tiet_dien_tieu_thu_ky_nay": "mdi:calendar-month",
             "tien_dien_san_luong_nam_nay": "mdi:calendar-month",
+            "tien_no": "mdi:cash-multiple",
             "lich_cat_dien": "mdi:calendar-alert"
         }
         return ICON_MAPPING.get(self._sensor_type, None)
@@ -474,7 +486,7 @@ class EVNSensor(SensorEntity):
             return "kWh"
         if self._sensor_type.startswith("tieu_thu"):
             return "kWh"
-        if self._sensor_type.startswith("tien_dien"):
+        if self._sensor_type.startswith("tien_"):
             return "VNĐ"
         return self._unit
 

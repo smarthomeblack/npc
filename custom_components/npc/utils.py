@@ -373,3 +373,18 @@ def export_pdf_from_db(userevn, db_path=None, pdf_dir=None):
         return file_infos
     except Exception:
         return []
+
+
+def lay_tien_no_evn(userevn):
+    """Lấy số tiền nợ EVN và ngày cập nhật mới nhất cho userevn từ bảng tien_no_evn."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT tien_no, ngay_cap_nhat FROM tien_no_evn WHERE userevn=? ORDER BY ngay_cap_nhat DESC LIMIT 1",
+        (userevn,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return chuyen_doi_so(row[0]), row[1]
+    return None, None
