@@ -12,8 +12,6 @@ from .utils import tinhngaydauky, laychisongay, laydientieuthungay, \
     laylichcatdien, laychisongaygannhat, export_pdf_from_db
 from .config_flow import CONF_NGAYDAUKY
 
-CONF_MESSAGE_THREAD_ID = "message_thread_id"
-
 # Thời gian scan file DB
 SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -47,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.debug(f"Adding {len(entities)} sensors for {userevn}")
     # Thêm sensor tự động tải PDF
     pdf_unique_id = f"{userevn}_hoa_don"
-    pdf_sensor = AutoPDFDownloadSensor(hass, userevn, pdf_unique_id, config_entry)
+    pdf_sensor = AutoPDFDownloadSensor(hass, userevn, pdf_unique_id)
     entities.append(pdf_sensor)
     async_add_entities(entities)
     return True
@@ -482,7 +480,7 @@ class EVNSensor(SensorEntity):
 class AutoPDFDownloadSensor(SensorEntity):
     SCAN_INTERVAL = timedelta(minutes=10)
 
-    def __init__(self, hass, userevn, unique_id, config_entry):
+    def __init__(self, hass, userevn, unique_id):
         self._hass = hass
         self._userevn = userevn
         self._unique_id = unique_id
@@ -491,7 +489,6 @@ class AutoPDFDownloadSensor(SensorEntity):
         self._attributes = {}
         self._last_pdf_path = None
         self._last_result = None
-        self._config_entry = config_entry
 
     async def async_added_to_hass(self):
         await self.async_update()
@@ -533,6 +530,7 @@ class AutoPDFDownloadSensor(SensorEntity):
         }
 
     async def async_update(self):
+        # Lấy tất cả hóa đơn PDF từ DB cho user
         import shutil
         try:
             pdf_infos = await self._hass.async_add_executor_job(
@@ -555,54 +553,35 @@ class AutoPDFDownloadSensor(SensorEntity):
                         os.makedirs(www_dir, exist_ok=True)
                     for info in pdf_infos:
                         if info.get("downloaded") and os.path.exists(info["file"]):
+                            # Copy file sang www/evnvn
                             basename = os.path.basename(info["file"])
                             temp_path = os.path.join(www_dir, basename)
                             try:
                                 await self._hass.async_add_executor_job(shutil.copy2, info["file"], temp_path)
-                                _LOGGER.debug(f"Đã copy file {info['file']} sang {temp_path}")
+                                _LOGGER.error(f"Đã copy file {info['file']} sang {temp_path}")
                             except Exception as copy_ex:
-                                _LOGGER.debug(f"Lỗi khi copy file {info['file']} sang {temp_path}: {copy_ex}")
+                                _LOGGER.error(f"Lỗi khi copy file {info['file']} sang {temp_path}: {copy_ex}")
                                 continue
                             caption = (
                                 f"Hóa đơn điện {info['month']:02d}/{info['year']} cho {self._userevn}"
                             )
-                            # Lấy message_thread_id từ config_entry
-                            message_thread_id = None
-                            try:
-                                options = self._config_entry.options
-                                data = self._config_entry.data
-                                message_thread_id_raw = options.get(CONF_MESSAGE_THREAD_ID)
-                                if not message_thread_id_raw:
-                                    message_thread_id_raw = data.get(CONF_MESSAGE_THREAD_ID)
-                                if message_thread_id_raw:
-                                    try:
-                                        message_thread_id = int(message_thread_id_raw)
-                                        if message_thread_id <= 0:
-                                            message_thread_id = None
-                                    except Exception:
-                                        message_thread_id = None
-                            except Exception:
-                                message_thread_id = None
-                            payload = {
-                                "file": temp_path,
-                                "caption": caption
-                            }
-                            # Chỉ thêm nếu là số nguyên dương
-                            if isinstance(message_thread_id, int) and message_thread_id > 0:
-                                payload["message_thread_id"] = message_thread_id
                             try:
                                 await self._hass.services.async_call(
                                     "telegram_bot", "send_document",
-                                    payload,
+                                    {
+                                        "file": temp_path,
+                                        "caption": caption
+                                    },
                                     blocking=True
                                 )
                             except Exception as send_ex:
-                                _LOGGER.debug(f"Lỗi khi gửi file {temp_path} qua Telegram: {send_ex}")
+                                _LOGGER.error(f"Lỗi khi gửi file {temp_path} qua Telegram: {send_ex}")
+                            # Xóa file tạm sau khi gửi
                             try:
                                 os.remove(temp_path)
-                                _LOGGER.debug(f"Đã xóa file tạm {temp_path}")
+                                _LOGGER.error(f"Đã xóa file tạm {temp_path}")
                             except Exception as ex:
-                                _LOGGER.debug(f"Không xóa được file tạm {temp_path}: {ex}")
+                                _LOGGER.error(f"Không xóa được file tạm {temp_path}: {ex}")
             else:
                 self._state = "Không tìm thấy PDF nào"
                 self._last_result = "Không tìm thấy PDF"
@@ -612,7 +591,7 @@ class AutoPDFDownloadSensor(SensorEntity):
                 }
         except Exception as e:
             import traceback
-            _LOGGER.debug(f"[AutoPDFDownloadSensor] Exception: {e}\n{traceback.format_exc()}")
+            _LOGGER.error(f"[AutoPDFDownloadSensor] Exception: {e}\n{traceback.format_exc()}")
             self._state = "Lỗi"
             self._last_result = str(e)
             self._attributes = {

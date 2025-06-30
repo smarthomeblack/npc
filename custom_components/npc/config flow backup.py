@@ -9,7 +9,6 @@ from datetime import datetime
 _LOGGER = logging.getLogger(__name__)
 CONF_NGAYDAUKY = "ngaydauky"
 CONF_PHUONG_THUC = "phuong_thuc"
-CONF_MESSAGE_THREAD_ID = "message_thread_id"
 
 TRUONG_MA_KHACH_HANG = (
     lambda data: {
@@ -121,7 +120,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         if user_input is not None:
             ma_khach_hang = user_input[CONF_USERNAME]
             ngay_dau_ky = user_input[CONF_NGAYDAUKY]
-            message_thread_id = user_input.get(CONF_MESSAGE_THREAD_ID, "")
 
             # Validation
             kiem_tra_ton_tai = await self._kiem_tra_ma_khach_hang_ton_tai(ma_khach_hang)
@@ -130,13 +128,10 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
 
             # Nếu validation thành công, chuyển đến preview step thay vì tạo entry luôn
             if not errors:
-                # Lưu toàn bộ user_input (bao gồm message_thread_id) vào biến tạm
-                self._preview_data = {
+                return await self.async_step_preview_auto({
                     CONF_USERNAME: ma_khach_hang,
-                    CONF_NGAYDAUKY: ngay_dau_ky,
-                    CONF_MESSAGE_THREAD_ID: message_thread_id
-                }
-                return await self.async_step_preview_auto()
+                    CONF_NGAYDAUKY: ngay_dau_ky
+                })
 
         # Lấy mã khách hàng
         customer_codes = await self._lay_danh_sach_ma_khach_hang_tu_database()
@@ -153,9 +148,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                     options=options,
                     mode=selector.SelectSelectorMode.DROPDOWN
                 )
-            ),
-            vol.Optional(CONF_MESSAGE_THREAD_ID, default=""): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
             )
         }
         schema_du_lieu.update(TRUONG_NGAY_DAU_KY)
@@ -181,7 +173,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         loi = {}
         if user_input is not None:
             ma_khach_hang = user_input[CONF_USERNAME].strip().upper()
-            message_thread_id = user_input.get(CONF_MESSAGE_THREAD_ID, "")
             if not (ma_khach_hang.startswith('P') or ma_khach_hang.startswith('S')) or len(ma_khach_hang) < 11:
                 loi[CONF_USERNAME] = "invalid_evn_code"
             else:
@@ -189,18 +180,14 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                 if not kiem_tra_ton_tai:
                     loi[CONF_USERNAME] = "customer_not_found"
             if not loi:
-                self._preview_data_manual = {
+                # Valid input - redirect to preview step
+                return await self.async_step_preview_manual({
                     CONF_USERNAME: ma_khach_hang,
-                    CONF_NGAYDAUKY: user_input[CONF_NGAYDAUKY],
-                    CONF_MESSAGE_THREAD_ID: message_thread_id
-                }
-                return await self.async_step_preview_manual()
+                    CONF_NGAYDAUKY: user_input[CONF_NGAYDAUKY]
+                })
         schema_du_lieu = {}
         schema_du_lieu.update(TRUONG_MA_KHACH_HANG({}))
         schema_du_lieu.update(TRUONG_NGAY_DAU_KY)
-        schema_du_lieu[vol.Optional(CONF_MESSAGE_THREAD_ID, default="")] = selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-        )
 
         return self.async_show_form(
             step_id="manual",
@@ -361,9 +348,13 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         if hasattr(self, '_preview_data'):
             ma_khach_hang = self._preview_data[CONF_USERNAME]
             ngay_dau_ky = self._preview_data[CONF_NGAYDAUKY]
-            message_thread_id = self._preview_data.get(CONF_MESSAGE_THREAD_ID, "")
         else:
-            return await self.async_step_auto()
+            if user_input and CONF_USERNAME in user_input:
+                ma_khach_hang = user_input[CONF_USERNAME]
+                ngay_dau_ky = user_input[CONF_NGAYDAUKY]
+                self._preview_data = {CONF_USERNAME: ma_khach_hang, CONF_NGAYDAUKY: ngay_dau_ky}
+            else:
+                return await self.async_step_auto()
         preview_data = await self._tao_data_preview(ma_khach_hang, ngay_dau_ky)
         errors = {}
         if user_input and user_input.get("confirm"):
@@ -379,8 +370,7 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                 title=ma_khach_hang,
                 data={
                     CONF_USERNAME: ma_khach_hang,
-                    CONF_NGAYDAUKY: ngay_dau_ky,
-                    CONF_MESSAGE_THREAD_ID: message_thread_id
+                    CONF_NGAYDAUKY: ngay_dau_ky
                 }
             )
         elif user_input and user_input.get("back"):
@@ -416,9 +406,13 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         if hasattr(self, '_preview_data_manual'):
             ma_khach_hang = self._preview_data_manual[CONF_USERNAME]
             ngay_dau_ky = self._preview_data_manual[CONF_NGAYDAUKY]
-            message_thread_id = self._preview_data_manual.get(CONF_MESSAGE_THREAD_ID, "")
         else:
-            return await self.async_step_manual()
+            if user_input and CONF_USERNAME in user_input:
+                ma_khach_hang = user_input[CONF_USERNAME]
+                ngay_dau_ky = user_input[CONF_NGAYDAUKY]
+                self._preview_data_manual = {CONF_USERNAME: ma_khach_hang, CONF_NGAYDAUKY: ngay_dau_ky}
+            else:
+                return await self.async_step_manual()
         preview_data = await self._tao_data_preview(ma_khach_hang, ngay_dau_ky)
         errors = {}
         if user_input and user_input.get("confirm"):
@@ -434,8 +428,7 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                 title=ma_khach_hang,
                 data={
                     CONF_USERNAME: ma_khach_hang,
-                    CONF_NGAYDAUKY: ngay_dau_ky,
-                    CONF_MESSAGE_THREAD_ID: message_thread_id
+                    CONF_NGAYDAUKY: ngay_dau_ky
                 }
             )
         elif user_input and user_input.get("back"):
@@ -474,19 +467,11 @@ class XuLyTuyChon(config_entries.OptionsFlow):
             CONF_NGAYDAUKY,
             self.config_entry.data.get(CONF_NGAYDAUKY, 1)
         )
-        message_thread_id_hien_tai = self.config_entry.options.get(
-            CONF_MESSAGE_THREAD_ID,
-            self.config_entry.data.get(CONF_MESSAGE_THREAD_ID, "")
-        )
         if user_input is not None:
             try:
                 ngay_dau_ky = int(user_input[CONF_NGAYDAUKY])
-                message_thread_id = user_input.get(CONF_MESSAGE_THREAD_ID, "")
                 if 1 <= ngay_dau_ky <= 31:
-                    tuy_chon = {
-                        CONF_NGAYDAUKY: ngay_dau_ky,
-                        CONF_MESSAGE_THREAD_ID: message_thread_id
-                    }
+                    tuy_chon = {CONF_NGAYDAUKY: ngay_dau_ky}
                     return self.async_create_entry(title="", data=tuy_chon)
                 else:
                     loi[CONF_NGAYDAUKY] = "invalid_day"
@@ -505,12 +490,6 @@ class XuLyTuyChon(config_entries.OptionsFlow):
                         max=31,
                         mode=selector.NumberSelectorMode.BOX
                     )
-                ),
-                vol.Optional(
-                    CONF_MESSAGE_THREAD_ID,
-                    default=message_thread_id_hien_tai
-                ): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
                 )
             }),
             errors=loi

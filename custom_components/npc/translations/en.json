@@ -14,11 +14,13 @@
         "title": "🤖 Automatic Setup",
         "data": {
           "username": "🆔 EVN Customer Code",
-          "ngaydauky": "📅 Billing Start Day"
+          "ngaydauky": "📅 Billing Start Day",
+          "message_thread_id": "💬 Telegram Thread ID (optional)"
         },
         "data_description": {
           "username": "Select customer code from available list",
-          "ngaydauky": "Select billing cycle start day (usually day 1-28)"
+          "ngaydauky": "Select billing cycle start day (usually day 1-28)",
+          "message_thread_id": "Enter Telegram thread ID if you want to send PDF to a specific topic (leave blank if not used)"
         },
         "description": "### 🤖 Automatic Setup\n\n✅ Found data from EVN VN Addon\n📊 Data source: EVN VN Addon Database\n🔄 Sync: Auto update from addon\n\n**Select customer code and billing start day:**"
       },
@@ -26,11 +28,13 @@
         "title": "✏️ Manual Setup",
         "data": {
           "username": "🆔 EVN Customer Code",
-          "ngaydauky": "📅 Billing Start Day"
+          "ngaydauky": "📅 Billing Start Day",
+          "message_thread_id": "💬 Telegram Thread ID (optional)"
         },
         "data_description": {
           "username": "Enter your customer code from EVN electricity bill",
-          "ngaydauky": "Select billing cycle start day (usually day 1-28)"
+          "ngaydauky": "Select billing cycle start day (usually day 1-28)",
+          "message_thread_id": "Enter Telegram thread ID if you want to send PDF to a specific topic (leave blank if not used)"
         },        "description": "### ✏️ Manual Setup\n\n📝 **Enter EVN Customer Code**\n🔍 **Format**: Must start with P or S, minimum 11 characters\n💫 **Smart Preview**: Data will show after validation succeeds\n\n**Enter information:**"
       },
       "preview_auto": {
@@ -71,10 +75,12 @@
       "init": {
         "title": "⚙️ EVN Settings",
         "data": {
-          "ngaydauky": "📅 Billing Start Day"
+          "ngaydauky": "📅 Billing Start Day",
+          "message_thread_id": "💬 Telegram Thread ID (optional)"
         },
         "data_description": {
-          "ngaydauky": "Adjust billing cycle start day"
+          "ngaydauky": "Adjust billing cycle start day",
+          "message_thread_id": "Enter Telegram thread ID if you want to send PDF to a specific topic (leave blank if not used)"
         }
       }
     }

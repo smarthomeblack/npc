@@ -2,9 +2,11 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from .const import DOMAIN
+import os
 
 _LOGGER = logging.getLogger(__name__)
 DB_PATH = "/config/evnvn/evndata.db"
+PDF_PATH = "/config/evnvn"
 
 
 def set_lancapnhapcuoi(hass, userevn, dt=None):
@@ -337,3 +339,37 @@ def laylichcatdien(userevn):
                 "Khu vực": row[5]
             })
     return result
+
+
+def export_pdf_from_db(userevn, db_path=None, pdf_dir=None):
+    db_file = db_path or DB_PATH
+    out_dir = pdf_dir or PDF_PATH
+    try:
+        now = datetime.now()
+        current_year = now.year
+        current_month = now.month
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir, exist_ok=True)
+        file_infos = []
+        for m in range(1, current_month + 1):
+            file_path = os.path.join(out_dir, f"hoadon_{userevn}_{m}_{current_year}.pdf")
+            info = {"month": m, "year": current_year, "file": file_path, "downloaded": False}
+            if not os.path.exists(file_path):
+                conn = sqlite3.connect(db_file)
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT pdf FROM hoadon_pdf WHERE userevn=? AND thang=? AND nam=? ORDER BY id DESC LIMIT 1",
+                    (userevn, m, current_year)
+                )
+                row = cursor.fetchone()
+                conn.close()
+                if row and row[0]:
+                    with open(file_path, "wb") as f:
+                        f.write(row[0])
+                    info["downloaded"] = True
+            else:
+                info["downloaded"] = False
+            file_infos.append(info)
+        return file_infos
+    except Exception:
+        return []
