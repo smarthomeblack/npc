@@ -561,6 +561,7 @@ class AutoPDFDownloadSensor(SensorEntity):
                     "result": "Thành công"
                 }
                 # Gửi từng file PDF mới qua telegram_bot.send_document
+                # Gửi từng file PNG qua zalo_bot.send_image
                 if num_downloaded > 0:
                     www_dir = os.path.join(self._hass.config.path("www"), "evnvn")
                     if not os.path.exists(www_dir):
@@ -615,6 +616,65 @@ class AutoPDFDownloadSensor(SensorEntity):
                                 _LOGGER.debug(f"Đã xóa file tạm {temp_path}")
                             except Exception as ex:
                                 _LOGGER.debug(f"Không xóa được file tạm {temp_path}: {ex}")
+                        # Gửi file PNG qua Zalo
+                        png_files = info.get("png_files", [])
+                        # Lấy cấu hình Zalo từ config_entry
+                        zalo_thread_id = None
+                        zalo_account_selection = "+84xxxxxxxxx"
+                        zalo_type = "1"
+                        try:
+                            options = self._config_entry.options
+                            data = self._config_entry.data
+                            zalo_thread_id_raw = options.get("zalo_thread_id")
+                            if not zalo_thread_id_raw:
+                                zalo_thread_id_raw = data.get("zalo_thread_id")
+                            # Đảm bảo zalo_thread_id là str
+                            if zalo_thread_id_raw is not None:
+                                zalo_thread_id = str(zalo_thread_id_raw)
+                            else:
+                                zalo_thread_id = ""
+                            zalo_account_selection_raw = options.get("zalo_account_selection")
+                            if not zalo_account_selection_raw:
+                                zalo_account_selection_raw = data.get("zalo_account_selection")
+                            if zalo_account_selection_raw:
+                                zalo_account_selection = str(zalo_account_selection_raw)
+                            zalo_type_raw = options.get("zalo_type")
+                            if not zalo_type_raw:
+                                zalo_type_raw = data.get("zalo_type")
+                            if zalo_type_raw:
+                                try:
+                                    zalo_type = int(zalo_type_raw)
+                                except Exception:
+                                    zalo_type = 1
+                        except Exception:
+                            pass
+                        for png_path in png_files:
+                            zalo_image_path = os.path.join(www_dir, os.path.basename(png_path))
+                            try:
+                                await self._hass.async_add_executor_job(shutil.copy2, png_path, zalo_image_path)
+                                _LOGGER.debug(f"Đã copy file {png_path} sang {zalo_image_path}")
+                            except Exception as copy_ex:
+                                _LOGGER.debug(f"Lỗi khi copy file {png_path} sang {zalo_image_path}: {copy_ex}")
+                                continue
+                            zalo_payload = {
+                                "image_path": zalo_image_path,
+                                "thread_id": zalo_thread_id,
+                                "account_selection": zalo_account_selection,
+                                "type": zalo_type
+                            }
+                            try:
+                                await self._hass.services.async_call(
+                                    "zalo_bot", "send_image",
+                                    zalo_payload,
+                                    blocking=True
+                                )
+                            except Exception as zalo_ex:
+                                _LOGGER.debug(f"Lỗi khi gửi ảnh {zalo_image_path} qua Zalo: {zalo_ex}")
+                            try:
+                                os.remove(zalo_image_path)
+                                _LOGGER.debug(f"Đã xóa file tạm {zalo_image_path}")
+                            except Exception as ex:
+                                _LOGGER.debug(f"Không xóa được file tạm {zalo_image_path}: {ex}")
             else:
                 self._state = "Không tìm thấy PDF nào"
                 self._last_result = "Không tìm thấy PDF"
