@@ -342,7 +342,7 @@ def laylichcatdien(userevn):
     return result
 
 
-def export_pdf_from_db(userevn, db_path=None, pdf_dir=None):
+def export_pdf_from_db(userevn, db_path=None, pdf_dir=None, dpi=300):
     db_file = db_path or DB_PATH
     out_dir = pdf_dir or PDF_PATH
     try:
@@ -373,7 +373,7 @@ def export_pdf_from_db(userevn, db_path=None, pdf_dir=None):
             # Chuyển PDF sang PNG nếu file PDF vừa được tạo hoặc đã tồn tại
             if os.path.exists(file_path):
                 try:
-                    png_files = pdf_to_png(file_path, out_dir)
+                    png_files = pdf_to_png(file_path, out_dir, dpi=dpi)
                     info["png_files"] = png_files
                 except Exception as e:
                     info["png_files"] = []
@@ -384,7 +384,7 @@ def export_pdf_from_db(userevn, db_path=None, pdf_dir=None):
         return []
 
 
-def pdf_to_png(pdf_path, output_dir=None):
+def pdf_to_png(pdf_path, output_dir=None, dpi=300):
     """
     Chuyển đổi file PDF sang PNG, trả về danh sách file PNG đã tạo.
     Sử dụng PyMuPDF.
@@ -397,7 +397,7 @@ def pdf_to_png(pdf_path, output_dir=None):
     doc = fitz.open(pdf_path)
     for i in range(len(doc)):
         page = doc.load_page(i)
-        pix = page.get_pixmap()
+        pix = page.get_pixmap(dpi=dpi)
         png_path = os.path.join(
             output_dir,
             f"{os.path.splitext(os.path.basename(pdf_path))[0]}_page_{i+1}.png"
