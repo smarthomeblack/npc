@@ -342,7 +342,7 @@ def laylichcatdien(userevn):
     return result
 
 
-def export_pdf_from_db(userevn, db_path=None, pdf_dir=None, dpi=300):
+def export_pdf_from_db(userevn, db_path=None, pdf_dir=None, dpi=600):
     db_file = db_path or DB_PATH
     out_dir = pdf_dir or PDF_PATH
     try:
@@ -384,7 +384,7 @@ def export_pdf_from_db(userevn, db_path=None, pdf_dir=None, dpi=300):
         return []
 
 
-def pdf_to_png(pdf_path, output_dir=None, dpi=300):
+def pdf_to_png(pdf_path, output_dir=None, dpi=600):
     """
     Chuyển đổi file PDF sang PNG, trả về danh sách file PNG đã tạo.
     Sử dụng PyMuPDF.
