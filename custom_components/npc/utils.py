@@ -2,12 +2,9 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from .const import DOMAIN
-import os
-import fitz  # PyMuPDF
 
 _LOGGER = logging.getLogger(__name__)
 DB_PATH = "/config/evnvn/evndata.db"
-PDF_PATH = "/config/evnvn"
 
 
 def set_lancapnhapcuoi(hass, userevn, dt=None):
@@ -342,71 +339,6 @@ def laylichcatdien(userevn):
     return result
 
 
-def export_pdf_from_db(userevn, db_path=None, pdf_dir=None, dpi=600):
-    db_file = db_path or DB_PATH
-    out_dir = pdf_dir or PDF_PATH
-    try:
-        now = datetime.now()
-        current_year = now.year
-        current_month = now.month
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir, exist_ok=True)
-        file_infos = []
-        for m in range(1, current_month + 1):
-            file_path = os.path.join(out_dir, f"hoadon_{userevn}_{m}_{current_year}.pdf")
-            info = {"month": m, "year": current_year, "file": file_path, "downloaded": False}
-            if not os.path.exists(file_path):
-                conn = sqlite3.connect(db_file)
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT pdf FROM hoadon_pdf WHERE userevn=? AND thang=? AND nam=? ORDER BY id DESC LIMIT 1",
-                    (userevn, m, current_year)
-                )
-                row = cursor.fetchone()
-                conn.close()
-                if row and row[0]:
-                    with open(file_path, "wb") as f:
-                        f.write(row[0])
-                    info["downloaded"] = True
-            else:
-                info["downloaded"] = False
-            # Chuyển PDF sang PNG nếu file PDF vừa được tạo hoặc đã tồn tại
-            if os.path.exists(file_path):
-                try:
-                    png_files = pdf_to_png(file_path, out_dir, dpi=dpi)
-                    info["png_files"] = png_files
-                except Exception as e:
-                    info["png_files"] = []
-                    _LOGGER.error(f"Lỗi chuyển PDF sang PNG: {e}")
-            file_infos.append(info)
-        return file_infos
-    except Exception:
-        return []
-
-
-def pdf_to_png(pdf_path, output_dir=None, dpi=600):
-    """
-    Chuyển đổi file PDF sang PNG, trả về danh sách file PNG đã tạo.
-    Sử dụng PyMuPDF.
-    """
-    if output_dir is None:
-        output_dir = os.path.dirname(pdf_path)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir, exist_ok=True)
-    png_files = []
-    doc = fitz.open(pdf_path)
-    for i in range(len(doc)):
-        page = doc.load_page(i)
-        pix = page.get_pixmap(dpi=dpi)
-        png_path = os.path.join(
-            output_dir,
-            f"{os.path.splitext(os.path.basename(pdf_path))[0]}_page_{i+1}.png"
-        )
-        pix.save(png_path)
-        png_files.append(png_path)
-    return png_files
-
-
 def lay_tien_no_evn(userevn):
     """Lấy số tiền nợ EVN và ngày cập nhật mới nhất cho userevn từ bảng tien_no_evn."""
     conn = sqlite3.connect(DB_PATH)
@@ -420,4 +352,3 @@ def lay_tien_no_evn(userevn):
     if row:
         return chuyen_doi_so(row[0]), row[1]
     return None, None
-

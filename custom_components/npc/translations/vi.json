@@ -14,19 +14,11 @@
         "title": "🤖 Thiết lập Tự Động",
         "data": {
           "username": "🆔 Mã khách hàng EVN",
-          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn",
-          "message_thread_id": "💬 ID luồng thảo luận Telegram (nếu có)",
-          "zalo_thread_id": "💬 ID luồng thảo luận Zalo nếu muốn gửi file vào một nhóm/cá nhân cụ thể (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_account_selection": "📱 Số điện thoại Bot Zalo (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_type": "👥 Loại gửi Zalo (1: nhóm, 0: cá nhân) (bỏ trống nếu không dùng, nếu dùng phải điền đúng)"
+          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
         },
         "data_description": {
           "username": "Chọn mã khách hàng từ danh sách có sẵn",
-          "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)",
-          "message_thread_id": "Nhập ID luồng thảo luận Telegram nếu muốn gửi file vào một topic cụ thể (bỏ trống nếu không dùng)",
-          "zalo_thread_id": "Nhập ID luồng thảo luận Zalo nếu muốn gửi file vào một nhóm/cá nhân cụ thể (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_account_selection": "Nhập số điện thoại Bot Zalo để gửi file (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_type": "Nhập 1 nếu gửi vào nhóm, 0 nếu gửi cho cá nhân (bỏ trống nếu không dùng, nếu dùng phải điền đúng)"
+          "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)"
         },
         "description": "### 🤖 Thiết lập Tự Động\n\n✅ Đã tìm thấy dữ liệu từ EVN VN Addon\n📊 Nguồn dữ liệu: EVN VN Addon Database\n🔄 Đồng bộ: Tự động cập nhật từ addon\n\n**Chọn mã khách hàng và ngày đầu kỳ:**"
       },
@@ -34,19 +26,11 @@
         "title": "✏️ Thiết lập Thủ Công",
         "data": {
           "username": "🆔 Mã khách hàng EVN",
-          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn",
-          "message_thread_id": "💬 ID luồng thảo luận Telegram (nếu có)",
-          "zalo_thread_id": "💬 Luồng thảo luận Zalo (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_account_selection": "📱 Số điện thoại Bot Zalo (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_type": "👥 Loại gửi Zalo (1: nhóm, 0: cá nhân) (bỏ trống nếu không dùng, nếu dùng phải điền đúng)"
+          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
         },
         "data_description": {
           "username": "Nhập mã khách hàng ghi trên hóa đơn điện của bạn",
-          "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)",
-          "message_thread_id": "Nhập ID luồng thảo luận Telegram nếu muốn gửi file vào một topic cụ thể (bỏ trống nếu không dùng)",
-          "zalo_thread_id": "Nhập ID luồng thảo luận Zalo nếu muốn gửi file vào một nhóm/cá nhân cụ thể (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_account_selection": "Nhập số điện thoại Bot Zalo để gửi file (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_type": "Nhập 1 nếu gửi vào nhóm, 0 nếu gửi cho cá nhân (bỏ trống nếu không dùng, nếu dùng phải điền đúng)"
+          "ngaydauky": "Chọn ngày bắt đầu chu kỳ thanh toán (thường là ngày 1-28)"
         },        "description": "### ✏️ Thiết lập Thủ Công\n\n📝 **Nhập mã khách hàng EVN**\n🔍 **Format**: Bắt đầu bằng P hoặc S, tối thiểu 11 ký tự\n💫 **Smart Preview**: Dữ liệu sẽ hiển thị sau khi validation thành công\n\n**Nhập thông tin:**"
       },
       "preview_auto": {
@@ -79,7 +63,7 @@
     },
     "error": {
       "invalid_evn_code": "❌ Mã khách hàng không hợp lệ!\n\n✅ Định dạng đúng:\n• Bắt đầu bằng P hoặc S\n• Có ít nhất 11 ký tự\n• Ví dụ: PE06800012345",
-      "customer_not_found": "🔍 Mã khách hàng không tồn tại!\n\n❗ Lý do có thể:\n• Nhập sai mã khách hàng của tài khoản\n• Addon EVN VN chạy lỗi\n• Addon EVN VN chưa lấy xong dữ liệu\n\n💬 Vui lòng kiểm tra lại hoặc liên hệ Zalo Black"
+      "customer_not_found": "🔍 Mã khách hàng không tồn tại!\n\n❗ Lý do có thể:\n• Nhập sai mã khách hàng của tài khoản\n• Addon EVN VN chạy lỗi\n• Addon EVN VN chưa lấy xong dữ liệu\n\n💬 Vui lòng kiểm tra lại hoặc liên hệ admin"
     }
   },
   "options": {
@@ -87,18 +71,10 @@
       "init": {
         "title": "⚙️ Cài đặt EVN",
         "data": {
-          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn",
-          "message_thread_id": "💬 ID luồng thảo luận Telegram (nếu có)",
-          "zalo_thread_id": "💬 Luồng thảo luận Zalo (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_account_selection": "📱 Số điện thoại Bot Zalo (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_type": "👥 Loại gửi Zalo (1: nhóm, 0: cá nhân) (bỏ trống nếu không dùng, nếu dùng phải điền đúng)"
+          "ngaydauky": "📅 Ngày đầu kỳ hóa đơn"
         },
         "data_description": {
-          "ngaydauky": "Điều chỉnh ngày bắt đầu chu kỳ thanh toán",
-          "message_thread_id": "Nhập ID luồng thảo luận Telegram nếu muốn gửi file vào một topic cụ thể (bỏ trống nếu không dùng)",
-          "zalo_thread_id": "Nhập ID luồng thảo luận Zalo nếu muốn gửi file vào một nhóm/cá nhân cụ thể (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_account_selection": "Nhập số điện thoại Bot Zalo để gửi file (bỏ trống nếu không dùng, nếu dùng phải điền đúng)",
-          "zalo_type": "Nhập 1 nếu gửi vào nhóm, 0 nếu gửi cho cá nhân (bỏ trống nếu không dùng, nếu dùng phải điền đúng)"
+          "ngaydauky": "Điều chỉnh ngày bắt đầu chu kỳ thanh toán"
         }
       }
     }

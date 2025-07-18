@@ -9,10 +9,6 @@ from datetime import datetime
 _LOGGER = logging.getLogger(__name__)
 CONF_NGAYDAUKY = "ngaydauky"
 CONF_PHUONG_THUC = "phuong_thuc"
-CONF_MESSAGE_THREAD_ID = "message_thread_id"
-CONF_ZALO_THREAD_ID = "zalo_thread_id"
-CONF_ZALO_ACCOUNT_SELECTION = "zalo_account_selection"
-CONF_ZALO_TYPE = "zalo_type"
 
 TRUONG_MA_KHACH_HANG = (
     lambda data: {
@@ -43,19 +39,6 @@ TRUONG_NGAY_DAU_KY = {
             step=1
         )
     ),
-}
-
-# Thêm trường cấu hình Zalo cho auto/manual
-TRUONG_ZALO = {
-    vol.Optional(CONF_ZALO_THREAD_ID, default=""): selector.TextSelector(
-        selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-    ),
-    vol.Optional(CONF_ZALO_ACCOUNT_SELECTION, default="+84xxxxxxxxx"): selector.TextSelector(
-        selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-    ),
-    vol.Optional(CONF_ZALO_TYPE, default="1"): selector.TextSelector(
-        selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-    )
 }
 
 
@@ -137,10 +120,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         if user_input is not None:
             ma_khach_hang = user_input[CONF_USERNAME]
             ngay_dau_ky = user_input[CONF_NGAYDAUKY]
-            message_thread_id = user_input.get(CONF_MESSAGE_THREAD_ID, "")
-            zalo_thread_id = user_input.get(CONF_ZALO_THREAD_ID, "")
-            zalo_account_selection = user_input.get(CONF_ZALO_ACCOUNT_SELECTION, "+84xxxxxxxxx")
-            zalo_type = user_input.get(CONF_ZALO_TYPE, "1")
 
             # Validation
             kiem_tra_ton_tai = await self._kiem_tra_ma_khach_hang_ton_tai(ma_khach_hang)
@@ -149,14 +128,10 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
 
             # Nếu validation thành công, chuyển đến preview step thay vì tạo entry luôn
             if not errors:
-                # Lưu toàn bộ user_input (bao gồm message_thread_id) vào biến tạm
+                # Lưu toàn bộ user_input vào biến tạm
                 self._preview_data = {
                     CONF_USERNAME: ma_khach_hang,
                     CONF_NGAYDAUKY: ngay_dau_ky,
-                    CONF_MESSAGE_THREAD_ID: message_thread_id,
-                    CONF_ZALO_THREAD_ID: zalo_thread_id,
-                    CONF_ZALO_ACCOUNT_SELECTION: zalo_account_selection,
-                    CONF_ZALO_TYPE: zalo_type
                 }
                 return await self.async_step_preview_auto()
 
@@ -175,13 +150,9 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                     options=options,
                     mode=selector.SelectSelectorMode.DROPDOWN
                 )
-            ),
-            vol.Optional(CONF_MESSAGE_THREAD_ID, default=""): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
             )
         }
         schema_du_lieu.update(TRUONG_NGAY_DAU_KY)
-        schema_du_lieu.update(TRUONG_ZALO)
         return self.async_show_form(
             step_id="auto",
             data_schema=vol.Schema(schema_du_lieu),
@@ -204,10 +175,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         loi = {}
         if user_input is not None:
             ma_khach_hang = user_input[CONF_USERNAME].strip().upper()
-            message_thread_id = user_input.get(CONF_MESSAGE_THREAD_ID, "")
-            zalo_thread_id = user_input.get(CONF_ZALO_THREAD_ID, "")
-            zalo_account_selection = user_input.get(CONF_ZALO_ACCOUNT_SELECTION, "+84xxxxxxxxx")
-            zalo_type = user_input.get(CONF_ZALO_TYPE, "1")
             if not (ma_khach_hang.startswith('P') or ma_khach_hang.startswith('S')) or len(ma_khach_hang) < 11:
                 loi[CONF_USERNAME] = "invalid_evn_code"
             else:
@@ -218,19 +185,11 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                 self._preview_data_manual = {
                     CONF_USERNAME: ma_khach_hang,
                     CONF_NGAYDAUKY: user_input[CONF_NGAYDAUKY],
-                    CONF_MESSAGE_THREAD_ID: message_thread_id,
-                    CONF_ZALO_THREAD_ID: zalo_thread_id,
-                    CONF_ZALO_ACCOUNT_SELECTION: zalo_account_selection,
-                    CONF_ZALO_TYPE: zalo_type
                 }
                 return await self.async_step_preview_manual()
         schema_du_lieu = {}
         schema_du_lieu.update(TRUONG_MA_KHACH_HANG({}))
         schema_du_lieu.update(TRUONG_NGAY_DAU_KY)
-        schema_du_lieu[vol.Optional(CONF_MESSAGE_THREAD_ID, default="")] = selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-        )
-        schema_du_lieu.update(TRUONG_ZALO)
 
         return self.async_show_form(
             step_id="manual",
@@ -391,10 +350,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         if hasattr(self, '_preview_data'):
             ma_khach_hang = self._preview_data[CONF_USERNAME]
             ngay_dau_ky = self._preview_data[CONF_NGAYDAUKY]
-            message_thread_id = self._preview_data.get(CONF_MESSAGE_THREAD_ID, "")
-            zalo_thread_id = self._preview_data.get(CONF_ZALO_THREAD_ID, "")
-            zalo_account_selection = self._preview_data.get(CONF_ZALO_ACCOUNT_SELECTION, "+84xxxxxxxxx")
-            zalo_type = self._preview_data.get(CONF_ZALO_TYPE, "1")
         else:
             return await self.async_step_auto()
         preview_data = await self._tao_data_preview(ma_khach_hang, ngay_dau_ky)
@@ -413,10 +368,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                 data={
                     CONF_USERNAME: ma_khach_hang,
                     CONF_NGAYDAUKY: ngay_dau_ky,
-                    CONF_MESSAGE_THREAD_ID: message_thread_id,
-                    CONF_ZALO_THREAD_ID: zalo_thread_id,
-                    CONF_ZALO_ACCOUNT_SELECTION: zalo_account_selection,
-                    CONF_ZALO_TYPE: zalo_type
                 }
             )
         elif user_input and user_input.get("back"):
@@ -452,10 +403,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
         if hasattr(self, '_preview_data_manual'):
             ma_khach_hang = self._preview_data_manual[CONF_USERNAME]
             ngay_dau_ky = self._preview_data_manual[CONF_NGAYDAUKY]
-            message_thread_id = self._preview_data_manual.get(CONF_MESSAGE_THREAD_ID, "")
-            zalo_thread_id = self._preview_data_manual.get(CONF_ZALO_THREAD_ID, "")
-            zalo_account_selection = self._preview_data_manual.get(CONF_ZALO_ACCOUNT_SELECTION, "+84xxxxxxxxx")
-            zalo_type = self._preview_data_manual.get(CONF_ZALO_TYPE, "1")
         else:
             return await self.async_step_manual()
         preview_data = await self._tao_data_preview(ma_khach_hang, ngay_dau_ky)
@@ -474,10 +421,6 @@ class CauHinhEVN(config_entries.ConfigFlow, domain="npc"):
                 data={
                     CONF_USERNAME: ma_khach_hang,
                     CONF_NGAYDAUKY: ngay_dau_ky,
-                    CONF_MESSAGE_THREAD_ID: message_thread_id,
-                    CONF_ZALO_THREAD_ID: zalo_thread_id,
-                    CONF_ZALO_ACCOUNT_SELECTION: zalo_account_selection,
-                    CONF_ZALO_TYPE: zalo_type
                 }
             )
         elif user_input and user_input.get("back"):
@@ -516,36 +459,12 @@ class XuLyTuyChon(config_entries.OptionsFlow):
             CONF_NGAYDAUKY,
             self.config_entry.data.get(CONF_NGAYDAUKY, 1)
         )
-        message_thread_id_hien_tai = self.config_entry.options.get(
-            CONF_MESSAGE_THREAD_ID,
-            self.config_entry.data.get(CONF_MESSAGE_THREAD_ID, "")
-        )
-        zalo_thread_id_hien_tai = self.config_entry.options.get(
-            CONF_ZALO_THREAD_ID,
-            self.config_entry.data.get(CONF_ZALO_THREAD_ID, "")
-        )
-        zalo_account_selection_hien_tai = self.config_entry.options.get(
-            CONF_ZALO_ACCOUNT_SELECTION,
-            self.config_entry.data.get(CONF_ZALO_ACCOUNT_SELECTION, "+84xxxxxxxxx")
-        )
-        zalo_type_hien_tai = self.config_entry.options.get(
-            CONF_ZALO_TYPE,
-            self.config_entry.data.get(CONF_ZALO_TYPE, "1")
-        )
         if user_input is not None:
             try:
                 ngay_dau_ky = int(user_input[CONF_NGAYDAUKY])
-                message_thread_id = user_input.get(CONF_MESSAGE_THREAD_ID, "")
-                zalo_thread_id = user_input.get(CONF_ZALO_THREAD_ID, "")
-                zalo_account_selection = user_input.get(CONF_ZALO_ACCOUNT_SELECTION, "+84xxxxxxxxx")
-                zalo_type = user_input.get(CONF_ZALO_TYPE, "1")
                 if 1 <= ngay_dau_ky <= 31:
                     tuy_chon = {
                         CONF_NGAYDAUKY: ngay_dau_ky,
-                        CONF_MESSAGE_THREAD_ID: message_thread_id,
-                        CONF_ZALO_THREAD_ID: zalo_thread_id,
-                        CONF_ZALO_ACCOUNT_SELECTION: zalo_account_selection,
-                        CONF_ZALO_TYPE: zalo_type
                     }
                     return self.async_create_entry(title="", data=tuy_chon)
                 else:
@@ -566,30 +485,6 @@ class XuLyTuyChon(config_entries.OptionsFlow):
                         mode=selector.NumberSelectorMode.BOX
                     )
                 ),
-                vol.Optional(
-                    CONF_MESSAGE_THREAD_ID,
-                    default=message_thread_id_hien_tai
-                ): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                ),
-                vol.Optional(
-                    CONF_ZALO_THREAD_ID,
-                    default=zalo_thread_id_hien_tai
-                ): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                ),
-                vol.Optional(
-                    CONF_ZALO_ACCOUNT_SELECTION,
-                    default=zalo_account_selection_hien_tai
-                ): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                ),
-                vol.Optional(
-                    CONF_ZALO_TYPE,
-                    default=zalo_type_hien_tai
-                ): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                )
             }),
             errors=loi
         )

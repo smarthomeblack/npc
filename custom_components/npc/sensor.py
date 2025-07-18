@@ -4,15 +4,12 @@ from homeassistant.util import dt as dt_util
 from calendar import monthrange
 from datetime import timedelta, datetime
 import logging
-import os
 from .const import DOMAIN
 from .utils import tinhngaydauky, laychisongay, laydientieuthungay, \
     laydientieuthuthang, laykhoangtieuthukynay, tinhtiendien, \
     layhoadon, set_lancapnhapcuoi, get_lancapnhapcuoi, \
-    laylichcatdien, laychisongaygannhat, export_pdf_from_db
+    laylichcatdien, laychisongaygannhat
 from .config_flow import CONF_NGAYDAUKY
-
-CONF_MESSAGE_THREAD_ID = "message_thread_id"
 
 # Thời gian scan file DB
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -45,10 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         unit = None
         entities.append(EVNSensor(hass, userevn, sensor_type, unique_id, unit, ngaydauky))
         _LOGGER.debug(f"Adding {len(entities)} sensors for {userevn}")
-    # Thêm sensor tự động tải PDF
-    pdf_unique_id = f"{userevn}_hoa_don"
-    pdf_sensor = AutoPDFDownloadSensor(hass, userevn, pdf_unique_id, config_entry)
-    entities.append(pdf_sensor)
     async_add_entities(entities)
     return True
 
@@ -70,7 +63,6 @@ VIETNAMESE_NAMES = {
     "tien_dien_san_luong_nam_nay": "Hóa đơn năm nay",
     "lich_cat_dien": "Lịch cắt điện",
     "lan_cap_nhat_cuoi": "Update Last",
-    "hoa_don": "Hóa đơn",
     "tien_no": "Tiền nợ",
 }
 
@@ -489,206 +481,3 @@ class EVNSensor(SensorEntity):
         if self._sensor_type.startswith("tien_"):
             return "VNĐ"
         return self._unit
-
-
-class AutoPDFDownloadSensor(SensorEntity):
-    SCAN_INTERVAL = timedelta(minutes=10)
-
-    def __init__(self, hass, userevn, unique_id, config_entry):
-        self._hass = hass
-        self._userevn = userevn
-        self._unique_id = unique_id
-        self._sensor_type = "hoa_don"
-        self._state = STATE_UNKNOWN
-        self._attributes = {}
-        self._last_pdf_path = None
-        self._last_result = None
-        self._config_entry = config_entry
-
-    async def async_added_to_hass(self):
-        await self.async_update()
-
-    @property
-    def name(self):
-        return VIETNAMESE_NAMES.get(
-            self._sensor_type,
-            self._sensor_type.replace('_', ' ').title()
-        )
-
-    @property
-    def unique_id(self):
-        return self._unique_id
-
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        return self._attributes
-
-    @property
-    def icon(self):
-        return "mdi:file-pdf-box"
-
-    @property
-    def should_poll(self):
-        return True
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._userevn)},
-            "name": f"EVN VN Device ({self._userevn})",
-            "manufacturer": "EVN VN",
-            "model": "Electricity Meter",
-        }
-
-    async def async_update(self):
-        import shutil
-        try:
-            pdf_infos = await self._hass.async_add_executor_job(
-                export_pdf_from_db, self._userevn
-            )
-            if pdf_infos:
-                num_downloaded = sum(1 for x in pdf_infos if x.get("downloaded"))
-                num_total = len(pdf_infos)
-                self._state = f"Đã lưu {num_total} file PDF, mới tải {num_downloaded}"
-                self._last_pdf_path = pdf_infos
-                self._last_result = "Thành công"
-                self._attributes = {
-                    "pdf_infos": pdf_infos,
-                    "result": "Thành công"
-                }
-                # Gửi từng file PDF mới qua telegram_bot.send_document
-                # Gửi từng file PNG qua zalo_bot.send_image
-                if num_downloaded > 0:
-                    www_dir = os.path.join(self._hass.config.path("www"), "evnvn")
-                    if not os.path.exists(www_dir):
-                        os.makedirs(www_dir, exist_ok=True)
-                    for info in pdf_infos:
-                        if info.get("downloaded") and os.path.exists(info["file"]):
-                            basename = os.path.basename(info["file"])
-                            temp_path = os.path.join(www_dir, basename)
-                            try:
-                                await self._hass.async_add_executor_job(shutil.copy2, info["file"], temp_path)
-                                _LOGGER.debug(f"Đã copy file {info['file']} sang {temp_path}")
-                            except Exception as copy_ex:
-                                _LOGGER.debug(f"Lỗi khi copy file {info['file']} sang {temp_path}: {copy_ex}")
-                                continue
-                            caption = (
-                                f"Hóa đơn điện {info['month']:02d}/{info['year']} cho {self._userevn}"
-                            )
-                            # Lấy message_thread_id từ config_entry
-                            message_thread_id = None
-                            try:
-                                options = self._config_entry.options
-                                data = self._config_entry.data
-                                message_thread_id_raw = options.get(CONF_MESSAGE_THREAD_ID)
-                                if not message_thread_id_raw:
-                                    message_thread_id_raw = data.get(CONF_MESSAGE_THREAD_ID)
-                                if message_thread_id_raw:
-                                    try:
-                                        message_thread_id = int(message_thread_id_raw)
-                                        if message_thread_id <= 0:
-                                            message_thread_id = None
-                                    except Exception:
-                                        message_thread_id = None
-                            except Exception:
-                                message_thread_id = None
-                            payload = {
-                                "file": temp_path,
-                                "caption": caption
-                            }
-                            # Chỉ thêm nếu là số nguyên dương
-                            if isinstance(message_thread_id, int) and message_thread_id > 0:
-                                payload["message_thread_id"] = message_thread_id
-                            try:
-                                await self._hass.services.async_call(
-                                    "telegram_bot", "send_document",
-                                    payload,
-                                    blocking=True
-                                )
-                            except Exception as send_ex:
-                                _LOGGER.debug(f"Lỗi khi gửi file {temp_path} qua Telegram: {send_ex}")
-                            try:
-                                os.remove(temp_path)
-                                _LOGGER.debug(f"Đã xóa file tạm {temp_path}")
-                            except Exception as ex:
-                                _LOGGER.debug(f"Không xóa được file tạm {temp_path}: {ex}")
-                            # Gửi file PNG qua Zalo (chỉ gửi nếu là hóa đơn mới download)
-                            if info.get("downloaded"):
-                                png_files = info.get("png_files", [])
-                                # Lấy cấu hình Zalo từ config_entry
-                                zalo_thread_id = None
-                                zalo_account_selection = "+84xxxxxxxxx"
-                                zalo_type = "1"
-                                try:
-                                    options = self._config_entry.options
-                                    data = self._config_entry.data
-                                    zalo_thread_id_raw = options.get("zalo_thread_id")
-                                    if not zalo_thread_id_raw:
-                                        zalo_thread_id_raw = data.get("zalo_thread_id")
-                                    # Đảm bảo zalo_thread_id là str
-                                    if zalo_thread_id_raw is not None:
-                                        zalo_thread_id = str(zalo_thread_id_raw)
-                                    else:
-                                        zalo_thread_id = ""
-                                    zalo_account_selection_raw = options.get("zalo_account_selection")
-                                    if not zalo_account_selection_raw:
-                                        zalo_account_selection_raw = data.get("zalo_account_selection")
-                                    if zalo_account_selection_raw:
-                                        zalo_account_selection = str(zalo_account_selection_raw)
-                                    zalo_type_raw = options.get("zalo_type")
-                                    if not zalo_type_raw:
-                                        zalo_type_raw = data.get("zalo_type")
-                                    if zalo_type_raw:
-                                        try:
-                                            zalo_type = int(zalo_type_raw)
-                                        except Exception:
-                                            zalo_type = 1
-                                except Exception:
-                                    pass
-                                for png_path in png_files:
-                                    zalo_image_path = os.path.join(www_dir, os.path.basename(png_path))
-                                    try:
-                                        await self._hass.async_add_executor_job(shutil.copy2, png_path, zalo_image_path)
-                                        _LOGGER.debug(f"Đã copy file {png_path} sang {zalo_image_path}")
-                                    except Exception as copy_ex:
-                                        _LOGGER.debug(f"Lỗi khi copy file {png_path} sang {zalo_image_path}: {copy_ex}")
-                                        continue
-                                    zalo_payload = {
-                                        "image_path": zalo_image_path,
-                                        "thread_id": zalo_thread_id,
-                                        "account_selection": zalo_account_selection,
-                                        "type": zalo_type
-                                    }
-                                    try:
-                                        await self._hass.services.async_call(
-                                            "zalo_bot", "send_image",
-                                            zalo_payload,
-                                            blocking=True
-                                        )
-                                    except Exception as zalo_ex:
-                                        _LOGGER.debug(f"Lỗi khi gửi ảnh {zalo_image_path} qua Zalo: {zalo_ex}")
-                                    try:
-                                        os.remove(zalo_image_path)
-                                        _LOGGER.debug(f"Đã xóa file tạm {zalo_image_path}")
-                                    except Exception as ex:
-                                        _LOGGER.debug(f"Không xóa được file tạm {zalo_image_path}: {ex}")
-            else:
-                self._state = "Không tìm thấy PDF nào"
-                self._last_result = "Không tìm thấy PDF"
-                self._attributes = {
-                    "pdf_infos": [],
-                    "result": "Không tìm thấy PDF"
-                }
-        except Exception as e:
-            import traceback
-            _LOGGER.debug(f"[AutoPDFDownloadSensor] Exception: {e}\n{traceback.format_exc()}")
-            self._state = "Lỗi"
-            self._last_result = str(e)
-            self._attributes = {
-                "pdf_infos": [],
-                "result": f"Lỗi: {e}"
-            }
