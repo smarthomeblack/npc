@@ -1,5 +1,10 @@
-# 🔌 EVN VN Electricity MQTT Bridge
+## ❓ Nhóm Support:
+- Zalo: https://zalo.me/g/alvkgn274
+- Telegram: https://t.me/smarthomeblack
 
+---
+
+# 🔌 EVN VN Electricity MQTT Bridge
 
 ---
 
