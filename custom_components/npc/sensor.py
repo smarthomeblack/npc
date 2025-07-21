@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.info(f"Setting up EVN VN sensors with ngaydauky={ngaydauky} from data")
 
     SENSOR_TYPES = [
-        "chi_so_dau_ky", "chi_so_cuoi_ky", "chi_so_tam_chot",
+        "chi_so_cuoi_ky", "chi_so_tam_chot",
         "tieu_thu_ky_nay", "tien_dien_ky_nay",
         "tieu_thu_ky_truoc", "tien_dien_ky_truoc",
         "tieu_thu_ky_truoc_nua", "tien_dien_ky_truoc_nua",
@@ -47,7 +47,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 VIETNAMESE_NAMES = {
-    "chi_so_dau_ky": "Chỉ số đầu kỳ",
     "chi_so_cuoi_ky": "Chỉ số cuối kỳ trước",
     "chi_so_tam_chot": "Chỉ số tạm chốt",
     "tieu_thu_ky_nay": "Tiêu thụ kỳ này",
@@ -105,12 +104,6 @@ class EVNSensor(SensorEntity):
             # Trả về int nếu là số nguyên, nếu không thì trả về round(value, 2) và loại bỏ phần thập phân dư thừa
             rounded = round(value, 2)
             return int(rounded) if rounded == int(rounded) else rounded
-        # Chỉ số đầu kỳ
-        if self._sensor_type == "chi_so_dau_ky":
-            start, _, _, _ = tinhngaydauky(self._ngaydauky, today)
-            chi_so = laychisongay(self._userevn, start.strftime("%Y-%m-%d"))
-            self._attributes = {"Ngày": start.strftime("%d-%m-%Y")}
-            return format_kwh(chi_so)
         # Chỉ số cuối kỳ trước: chỉ số điện của ngày cuối kỳ trước
         if self._sensor_type == "chi_so_cuoi_ky":
             # Tính ngày cuối kỳ trước dựa trên ngaydauky
@@ -577,7 +570,6 @@ class EVNSensor(SensorEntity):
     @property
     def icon(self):
         ICON_MAPPING = {
-            "chi_so_dau_ky": "mdi:transmission-tower-export",
             "chi_so_cuoi_ky": "mdi:transmission-tower-export",
             "chi_so_tam_chot": "mdi:transmission-tower-export",
             "tieu_thu_ky_nay": "mdi:transmission-tower-export",
