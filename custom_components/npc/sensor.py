@@ -413,22 +413,77 @@ class EVNSensor(SensorEntity):
             # Nếu không có dữ liệu từ hóa đơn tháng, tính bằng công thức tiền điện
             if tien is None:
                 _LOGGER.debug("Không có dữ liệu tien_dien_ky_truoc từ hóa đơn, tính theo công thức")
-                # Tạo một sensor tạm để lấy giá trị tiêu thụ kỳ trước
-                temp_sensor = EVNSensor(self._hass, self._userevn, "tieu_thu_ky_truoc",
-                                        f"{self._userevn}_tieu_thu_ky_truoc", None, self._ngaydauky)
-                tieu_thu = temp_sensor.state
-                if tieu_thu and tieu_thu > 0:
+                # Tính ngày cuối kỳ trước và ngày đầu kỳ trước
+                start_current, _, end_current, _ = tinhngaydauky(self._ngaydauky, today)
+                # Tính ngày cuối kỳ trước
+                if self._ngaydauky == 1:
+                    if today.month == 1:
+                        end_prev = datetime(today.year - 1, 12, 31).date()
+                    else:
+                        last_day = (datetime(today.year, today.month, 1) - timedelta(days=1)).day
+                        end_prev = datetime(today.year, today.month - 1, last_day).date()
+                else:
+                    end_prev = start_current - timedelta(days=1)
+                # Tính ngày cuối kỳ trước nữa
+                if self._ngaydauky == 1:
+                    if end_prev.month == 1:
+                        end_prev_prev = datetime(end_prev.year - 1, 12, 31).date()
+                    else:
+                        last_day = (datetime(end_prev.year, end_prev.month, 1) - timedelta(days=1)).day
+                        end_prev_prev = datetime(end_prev.year, end_prev.month - 1, last_day).date()
+                else:
+                    if end_prev.day < self._ngaydauky:
+                        if end_prev.month == 1:
+                            prev_start_month = 12
+                            prev_start_year = end_prev.year - 1
+                        else:
+                            prev_start_month = end_prev.month - 1
+                            prev_start_year = end_prev.year
+                    else:
+                        prev_start_month = end_prev.month
+                        prev_start_year = end_prev.year
+                    last_day_of_month = monthrange(prev_start_year, prev_start_month)[1]
+                    day_to_use = min(self._ngaydauky, last_day_of_month)
+                    prev_start = datetime(prev_start_year, prev_start_month, day_to_use).date()
+                    end_prev_prev = prev_start - timedelta(days=1)
+                end_prev_str = end_prev.strftime('%d-%m-%Y')
+                end_prev_prev_str = end_prev_prev.strftime('%d-%m-%Y')
+                _LOGGER.debug(f"Ngày cuối kỳ trước: {end_prev_str}, Ngày cuối kỳ trước nữa: {end_prev_prev_str}")
+                # Lấy chỉ số cuối kỳ trước
+                chi_so_prev = laychisongay(self._userevn, end_prev.strftime("%Y-%m-%d"))
+                # Nếu không có chỉ số cuối kỳ trước, tìm chỉ số gần nhất SAU ngày đó (tiến xuống)
+                if chi_so_prev is None or chi_so_prev <= 0:
+                    chi_so_prev, ngay_prev = laychisongaygannhat(
+                        self._userevn,
+                        end_prev.strftime("%Y-%m-%d"),
+                        reverse=False  # Tìm chỉ số gần nhất SAU ngày cuối kỳ trước
+                    )
+                    end_prev_str = ngay_prev if chi_so_prev is not None else end_prev_str
+                # Lấy chỉ số cuối kỳ trước nữa (đầu kỳ trước)
+                chi_so_prev_prev = laychisongay(self._userevn, end_prev_prev.strftime("%Y-%m-%d"))
+                # Nếu không có chỉ số cuối kỳ trước nữa, tìm chỉ số gần nhất TRƯỚC ngày đó (tiến lên)
+                if chi_so_prev_prev is None or chi_so_prev_prev <= 0:
+                    chi_so_prev_prev, ngay_prev_prev = laychisongaygannhat(
+                        self._userevn,
+                        end_prev_prev.strftime("%Y-%m-%d"),
+                        reverse=True  # Tìm chỉ số gần nhất TRƯỚC ngày cuối kỳ trước nữa
+                    )
+                    end_prev_prev_str = ngay_prev_prev if chi_so_prev_prev is not None else end_prev_prev_str
+                # Tính sản lượng nếu có đủ dữ liệu
+                if chi_so_prev is not None and chi_so_prev_prev is not None and chi_so_prev > chi_so_prev_prev:
+                    tieu_thu = chi_so_prev - chi_so_prev_prev
                     tien, tien_details = tinhtiendien(tieu_thu)
                     _LOGGER.debug(f"Tính tien_dien_ky_truoc theo công thức: {tieu_thu} kWh => {tien} VNĐ")
                     self._attributes.update({
                         "Tính theo công thức": True,
                         "Tiêu thụ": round(tieu_thu, 2),
-                        "Chi tiết tính tiền": tien_details
+                        "Chi tiết tính tiền": tien_details,
+                        "Chỉ số đầu kỳ trước": format_kwh(chi_so_prev_prev),
+                        "Chỉ số cuối kỳ trước": format_kwh(chi_so_prev),
+                        "Ngày đầu kỳ trước": end_prev_prev_str,
+                        "Ngày cuối kỳ trước": end_prev_str
                     })
-                    if hasattr(temp_sensor, '_attributes'):
-                        for key, value in temp_sensor._attributes.items():
-                            if key not in self._attributes:
-                                self._attributes[key] = value
+                    return int(round(tien, 0)) if tien is not None else 0
             return int(round(tien, 0)) if tien is not None else 0
         # Tiền điện kỳ trước nữa
         if self._sensor_type == "tien_dien_ky_truoc_nua":
