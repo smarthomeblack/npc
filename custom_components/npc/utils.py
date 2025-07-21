@@ -164,7 +164,7 @@ def laychisongaygannhat(userevn, date_str, reverse=False):
     Lấy chỉ số điện ngày gần nhất trong tháng/năm của date_str
     - userevn: mã khách hàng
     - date_str: ngày dạng yyyy-mm-dd hoặc dd-mm-yyyy
-    - reverse: nếu True thì lấy ngày xa nhất, False thì lấy ngày gần nhất
+    - reverse: nếu True thì lấy ngày gần nhất TRƯỚC ngày cần tìm, False thì lấy ngày gần nhất SAU ngày cần tìm
     """
     # Fix lỗi date_str là None hoặc không đúng định dạng
     if not date_str or not isinstance(date_str, str) or len(date_str) != 10:
@@ -192,51 +192,97 @@ def laychisongaygannhat(userevn, date_str, reverse=False):
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        order_direction = "ASC" if reverse else "DESC"
-        order_by_clause = (
-            f"ORDER BY substr(ngay,7,4) {order_direction}, "
-            f"substr(ngay,4,2) {order_direction}, "
-            f"substr(ngay,1,2) {order_direction}"
+
+        # Nếu reverse=True: tìm ngày gần nhất TRƯỚC ngày cần tìm -> sắp xếp giảm dần (DESC)
+        # Nếu reverse=False: tìm ngày gần nhất SAU ngày cần tìm -> sắp xếp tăng dần (ASC)
+        date_order = "DESC" if reverse else "ASC"
+
+        # Tạo câu lệnh SQL để tìm chỉ số gần nhất
+        # Đối với ngày cụ thể, chúng ta cần thêm điều kiện so sánh ngày
+        # Điều kiện cho ngày sau (reverse=False)
+        day_condition_after = (
+            f"AND (substr(ngay,7,4) > '{y}' OR "
+            f"(substr(ngay,7,4) = '{y}' AND "
+            f"substr(ngay,4,2) > '{m}') OR "
+            f"(substr(ngay,7,4) = '{y}' AND "
+            f"substr(ngay,4,2) = '{m}' AND "
+            f"substr(ngay,1,2) >= '{d}'))"
         )
+
+        # Điều kiện cho ngày trước (reverse=True)
+        day_condition_before = (
+            f"AND (substr(ngay,7,4) < '{y}' OR "
+            f"(substr(ngay,7,4) = '{y}' AND "
+            f"substr(ngay,4,2) < '{m}') OR "
+            f"(substr(ngay,7,4) = '{y}' AND "
+            f"substr(ngay,4,2) = '{m}' AND "
+            f"substr(ngay,1,2) <= '{d}'))"
+        )
+
+        day_condition = day_condition_before if reverse else day_condition_after
+
         query = (
             "SELECT ngay, chi_so FROM daily_consumption "
             "WHERE userevn=? "
-            "AND substr(ngay,4,2)=? AND substr(ngay,7,4)=? "
+            f"{day_condition} "
             "AND chi_so IS NOT NULL AND chi_so != '' "
             "AND lower(chi_so) != 'không có dữ liệu' AND chi_so != 'Khôngcódữliệu' "
-            f"{order_by_clause} LIMIT 1"
+            f"ORDER BY substr(ngay,7,4) {date_order}, substr(ngay,4,2) {date_order}, substr(ngay,1,2) {date_order} "
+            "LIMIT 1"
         )
+
         # Thực hiện truy vấn
         _LOGGER.debug(f"laychisongaygannhat: SQL query: {query}")
-        _LOGGER.debug(f"laychisongaygannhat: Params: userevn={userevn}, thang={m}, nam={y}")
-        cursor.execute(query, (userevn, m, y))
+        _LOGGER.debug(f"laychisongaygannhat: Params: userevn={userevn}")
+        cursor.execute(query, (userevn,))
         row = cursor.fetchone()
         _LOGGER.debug(f"laychisongaygannhat: Kết quả truy vấn: {row}")
-        # Nếu không tìm thấy, thử mở rộng tìm kiếm
+
+        # Nếu không tìm thấy, thử mở rộng tìm kiếm trong cùng tháng
         if not row:
-            _LOGGER.debug("laychisongaygannhat: Thử tìm không giới hạn ngày")
-            query_alt = (
+            _LOGGER.debug("laychisongaygannhat: Thử tìm trong cùng tháng")
+            query_month = (
                 "SELECT ngay, chi_so FROM daily_consumption "
                 "WHERE userevn=? "
+                "AND substr(ngay,4,2)=? AND substr(ngay,7,4)=? "
                 "AND chi_so IS NOT NULL AND chi_so != '' "
                 "AND lower(chi_so) != 'không có dữ liệu' AND chi_so != 'Khôngcódữliệu' "
-                f"{order_by_clause} LIMIT 1"
+                f"ORDER BY substr(ngay,1,2) {date_order} "
+                "LIMIT 1"
             )
-            cursor.execute(query_alt, (userevn,))
+            cursor.execute(query_month, (userevn, m, y))
             row = cursor.fetchone()
-            _LOGGER.debug(f"laychisongaygannhat: Kết quả truy vấn mở rộng: {row}")
-            # Vẫn không tìm thấy, kiểm tra xem có bản ghi nào trong DB không để debug
+            _LOGGER.debug(f"laychisongaygannhat: Kết quả truy vấn cùng tháng: {row}")
+
+            # Nếu vẫn không tìm thấy, thử tìm không giới hạn
             if not row:
-                cursor.execute("SELECT COUNT(*) FROM daily_consumption WHERE userevn=?", (userevn,))
-                count_row = cursor.fetchone()
-                _LOGGER.debug(f"laychisongaygannhat: Tổng số bản ghi cho {userevn}: {count_row[0] if count_row else 0}")
-                # Kiểm tra một số bản ghi đầu tiên để xem dạng dữ liệu
-                cursor.execute(
-                    "SELECT ngay, chi_so FROM daily_consumption WHERE userevn=? LIMIT 5",
-                    (userevn,)
+                _LOGGER.debug("laychisongaygannhat: Thử tìm không giới hạn ngày")
+                query_alt = (
+                    "SELECT ngay, chi_so FROM daily_consumption "
+                    "WHERE userevn=? "
+                    "AND chi_so IS NOT NULL AND chi_so != '' "
+                    "AND lower(chi_so) != 'không có dữ liệu' AND chi_so != 'Khôngcódữliệu' "
+                    f"ORDER BY substr(ngay,7,4) {date_order}, substr(ngay,4,2) {date_order}, "
+                    f"substr(ngay,1,2) {date_order} "
+                    "LIMIT 1"
                 )
-                sample_rows = cursor.fetchall()
-                _LOGGER.debug(f"laychisongaygannhat: Mẫu dữ liệu: {sample_rows}")
+                cursor.execute(query_alt, (userevn,))
+                row = cursor.fetchone()
+                _LOGGER.debug(f"laychisongaygannhat: Kết quả truy vấn mở rộng: {row}")
+
+                # Vẫn không tìm thấy, kiểm tra xem có bản ghi nào trong DB không để debug
+                if not row:
+                    cursor.execute("SELECT COUNT(*) FROM daily_consumption WHERE userevn=?", (userevn,))
+                    count_row = cursor.fetchone()
+                    _LOGGER.debug(f"Tổng số bản ghi cho {userevn}: {count_row[0] if count_row else 0}")
+                    # Kiểm tra một số bản ghi đầu tiên để xem dạng dữ liệu
+                    cursor.execute(
+                        "SELECT ngay, chi_so FROM daily_consumption WHERE userevn=? LIMIT 5",
+                        (userevn,)
+                    )
+                    sample_rows = cursor.fetchall()
+                    _LOGGER.debug(f"laychisongaygannhat: Mẫu dữ liệu: {sample_rows}")
+
         conn.close()
         if row and row[1] is not None:
             try:
@@ -255,7 +301,7 @@ def laychisongaygannhat(userevn, date_str, reverse=False):
                 _LOGGER.error(f"laychisongaygannhat: Lỗi chuyển đổi chỉ số: {row[1]}, lỗi: {str(e)}")
                 return None, None
         else:
-            _LOGGER.debug(f"laychisongaygannhat: Không tìm thấy dữ liệu cho {userevn}, tháng={m}, năm={y}")
+            _LOGGER.debug(f"laychisongaygannhat: Không tìm thấy dữ liệu cho {userevn}")
             return None, None
     except Exception as e:
         _LOGGER.error(f"laychisongaygannhat: Lỗi truy vấn DB: {str(e)}")
